@@ -24,7 +24,7 @@ public class BodyFromSession {
 
     @SerializedName("user")
     @Expose
-    public Object user;
+    public UserFromBodySession user;
 
     @SerializedName("sessionId")
     @Expose
@@ -35,7 +35,7 @@ public class BodyFromSession {
     public String message;
 
 
-    public Object getUser() {
+    public UserFromBodySession getUser() {
         return user;
     }
 

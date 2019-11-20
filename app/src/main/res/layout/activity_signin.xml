@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:text="Введите логин и пароль для входа"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_margin="15dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:textSize="14sp"
+            android:text="Логин"
+            android:layout_weight="3"/>
+        <EditText
+            android:id="@+id/etLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:textSize="14sp"
+            android:inputType="number"
+            android:gravity="center"
+            android:ems="10"
+            android:layout_weight="1"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_margin="15dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:textSize="14sp"
+            android:text="Пароль"
+            android:layout_weight="3"/>
+        <EditText
+            android:id="@+id/etPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:ems="10"
+            android:inputType="number"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_weight="1"/>
+    </LinearLayout>
+    <Button
+        android:id="@+id/btnEntry"
+        android:onClick="onClickEntry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorMainBlue"
+        android:textColor="#FFFFFF"
+        android:text="Вход"
+        android:layout_margin="10dp"
+        android:elevation="4dp"/>
+
+</LinearLayout>

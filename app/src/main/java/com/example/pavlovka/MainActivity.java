@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Intent intentSignin = new Intent(this, SigninActivity.class);
+        startActivity(intentSignin);
         myProgressBar = findViewById(R.id.pbWatersLevel);
         tvMotor = findViewById(R.id.tvMotor);
         tvUPPMain = findViewById(R.id.tvUPPMain);

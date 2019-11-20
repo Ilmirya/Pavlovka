@@ -5,6 +5,7 @@ import android.content.Context;
 import com.example.pavlovka.POJO.Auth.AuthBySession.AuthBySession;
 import com.example.pavlovka.POJO.GetSessionidd.BodyFromSession;
 import com.example.pavlovka.POJO.GetSessionidd.SessionJson;
+import com.example.pavlovka.POJO.GetSessionidd.UserFromBodySession;
 import com.example.pavlovka.POJO.Message;
 import com.example.pavlovka.POJO.Poll;
 import com.example.pavlovka.POJO.QueryFromDatabase.QueryDB;
@@ -37,10 +38,14 @@ public class ApiQuery {
         message.setBody(body);
         return message;
     }
-    public String AuthByLogin(Context context){
+
+    BodyFromSession post1 = new BodyFromSession();
+    UserFromBodySession userFromBodySession = new UserFromBodySession();
+    String strTFf;
+    public String AuthByLogin(Context context, String login, String password){
         SessionJson sessionJson = new SessionJson();
         sessionJson.setWhat("auth-by-login");
-        sessionJson.setLoginPassword("admin", "7472ee515fd6610cf741dccee9abef5a");
+        sessionJson.setLoginPassword(login, Util.getMd5(password));
 
         String json = gson.toJson(sessionJson);
         Call<SessionJson> call = NetworkService.Instance().getMxApi().getSessionId(json);
@@ -51,6 +56,10 @@ public class ApiQuery {
                 return "";
             }
             post = response.body().getBody();
+            post1 = post;
+            userFromBodySession = post.getUser();
+            strTFf = userFromBodySession.getIsAdmin();
+
         } catch (IOException e) {
             Util.logsError(e.getMessage(),context);
         }
@@ -168,11 +177,11 @@ public class ApiQuery {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(gSessionId == null || gSessionId.equals("")) return AuthByLogin(context);
+        if(gSessionId == null || gSessionId.equals("")) return AuthByLogin(context,"","");
         if(AuthBySession(context)){
             return gSessionId;
         }
-        return AuthByLogin(context);
+        return AuthByLogin(context,"","");
     }
 
     public boolean AuthBySession(Context context)
