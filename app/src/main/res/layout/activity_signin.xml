@@ -60,7 +60,7 @@
         android:onClick="onClickEntry"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorMainBlue"
+        android:background="#5ABEB4"
         android:textColor="#FFFFFF"
         android:text="Вход"
         android:layout_margin="10dp"

@@ -12,7 +12,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="center_horizontal"
         android:drawableEnd="@color/colorPrimary"
-        android:textColor="#6200EE"
+        android:textColor="#632182"
         android:textSize="14sp"
         android:layout_marginRight="4dp"
         android:textStyle="bold"

@@ -171,7 +171,7 @@
         android:layout_margin="10dp">
         <Switch
             android:id="@+id/switchAutoQueryByDiscrepancy"
-            android:textOn="@color/colorMainBlue"
+            android:textOn="#5ABEB4"
             android:theme="@style/MySwitch"
             android:layout_width="match_parent"
             android:layout_height="15dp"
@@ -186,7 +186,7 @@
         android:onClick="onClickSaveOptions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorMainBlue"
+        android:background="#5ABEB4"
         android:textColor="#FFFFFF"
         android:text="Сохранить"
         android:layout_margin="10dp"
