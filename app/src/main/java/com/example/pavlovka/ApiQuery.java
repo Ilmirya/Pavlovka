@@ -48,6 +48,7 @@ public class ApiQuery {
         sessionJson.setLoginPassword(login, Util.getMd5(password));
 
         String json = gson.toJson(sessionJson);
+        strTFf = json;
         Call<SessionJson> call = NetworkService.Instance().getMxApi().getSessionId(json);
         BodyFromSession post = new BodyFromSession();
         try {

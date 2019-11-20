@@ -7,7 +7,7 @@ public class BodyFromSession {
 
     @SerializedName("login")
     @Expose
-    public String login;
+    private String login;
 
     @SerializedName("password")
     @Expose
