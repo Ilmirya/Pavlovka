@@ -27,7 +27,7 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         etProc1 = findViewById(R.id.etProc1);
         etMaxTimeStop = findViewById(R.id.etMaxTimeStop);
         etProc2 = findViewById(R.id.etProc2);
-        switchAutoQueryByDiscrepancy = findViewById(R.id.switchAutoQueryByDiscrepancy);
+        switchAutoQueryByDiscrepancy = findViewById(R.id.swhAutoQueryByDiscrepancy);
         try {
             switchAutoQueryByDiscrepancy.setChecked(Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("AutoQueryByDiscrepancy", "false",this)));
             etWLSmin2.setText(Util.getPropertyOrSetDefaultValue("WLSmin2", "9",this));

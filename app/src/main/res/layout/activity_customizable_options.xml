@@ -4,25 +4,71 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <TextView
+        android:layout_margin="15dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="16sp"
         android:gravity="center"
-        android:text="Для уведомления"/>
+        android:text="Настройка уведомлений"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_margin="10dp">
+
+        <Switch
+
+            android:id="@+id/swhWlsLessThenWLsmin"
+            android:textOn="#5ABEB4"
+            android:theme="@style/MySwitch"
+            android:layout_width="35dp"
+            android:layout_height="15dp"
+            android:layout_weight="4"
+            android:layout_marginLeft="5dp"
+            android:textColor="@android:color/tertiary_text_dark"
+            android:checked="false"
+            android:textSize="14sp"
+            android:text="@string/stop_and_h_smaller"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_margin="10dp">
+
+        <Switch
+            android:id="@+id/swhWlsMoreThenWlsmax"
+            android:textOn="#5ABEB4"
+            android:theme="@style/MySwitch"
+            android:layout_width="35dp"
+            android:layout_height="15dp"
+            android:layout_weight="4"
+            android:layout_marginLeft="5dp"
+            android:textColor="@android:color/tertiary_text_dark"
+            android:checked="false"
+            android:textSize="14sp"
+            android:text="START and h > (default)"/>
+    </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_margin="10dp">
         <TextView
-            android:id="@+id/tvWLSmin2"
             android:layout_width="100dp"
             android:layout_height="match_parent"
+            android:layout_weight="4"
             android:gravity="center_vertical"
-            android:textSize="14sp"
+            android:layout_marginLeft="5dp"
             android:text="@string/start_and_h_smaller"
-            android:layout_weight="4"/>
+            android:textSize="14sp"
+            android:layout_marginRight="5dp"/>
+
         <EditText
             android:id="@+id/etWLSmin2"
             android:layout_width="10dp"
@@ -37,7 +83,14 @@
             android:gravity="center_vertical|right"
             android:textSize="14sp"
             android:text="м"
+            android:layout_marginRight="15dp"
             android:layout_weight="1"/>
+        <Switch
+            android:id="@+id/swhWLSmin2"
+            android:textOn="#5ABEB4"
+            android:theme="@style/MySwitch"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"/>
     </LinearLayout>
 
     <LinearLayout
@@ -45,14 +98,18 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_margin="10dp">
+
         <TextView
             android:id="@+id/tvWLSmax2"
             android:layout_width="100dp"
             android:layout_height="match_parent"
             android:gravity="center_vertical"
             android:textSize="14sp"
+            android:layout_marginLeft="5dp"
             android:text="START and h >"
-            android:layout_weight="4"/>
+            android:layout_weight="4"
+            android:layout_marginRight="5dp"/>/>
+
         <EditText
             android:id="@+id/etWLSmax2"
             android:layout_width="10dp"
@@ -67,21 +124,33 @@
             android:gravity="center_vertical|right"
             android:textSize="14sp"
             android:text="м"
+            android:layout_marginRight="15dp"
             android:layout_weight="1"/>
+
+        <Switch
+            android:id="@+id/swhtvWLSmax2"
+            android:textOn="#5ABEB4"
+            android:theme="@style/MySwitch"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_margin="10dp">
+
         <TextView
             android:id="@+id/tvProc1"
             android:layout_width="100dp"
             android:layout_height="match_parent"
             android:textSize="14sp"
             android:gravity="center_vertical"
+            android:layout_marginLeft="5dp"
             android:text="Несоответствие WLS по датчику и высоте более чем на"
-            android:layout_weight="4"/>
+            android:layout_weight="4"
+            android:layout_marginRight="5dp"/>/>
+
         <EditText
             android:id="@+id/etProc1"
             android:layout_width="10dp"
@@ -96,21 +165,33 @@
             android:gravity="center_vertical|right"
             android:textSize="14sp"
             android:text="%"
+            android:layout_marginRight="15dp"
             android:layout_weight="1"/>
+
+        <Switch
+            android:id="@+id/swhtvProc1"
+            android:textOn="#5ABEB4"
+            android:theme="@style/MySwitch"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_margin="10dp">
+
         <TextView
             android:id="@+id/tvMaxTimeStop"
             android:layout_width="100dp"
             android:layout_height="match_parent"
             android:gravity="center_vertical"
+            android:layout_marginLeft="5dp"
             android:textSize="14sp"
             android:text="Нахождение в STOP более чем"
-            android:layout_weight="4"/>
+            android:layout_weight="4"
+            android:layout_marginRight="5dp"/>/>
+
         <EditText
             android:id="@+id/etMaxTimeStop"
             android:layout_width="10dp"
@@ -126,13 +207,22 @@
             android:gravity="center_vertical|right"
             android:textSize="14sp"
             android:text="мин"
+            android:layout_marginRight="15dp"
             android:layout_weight="1"/>
+
+        <Switch
+            android:id="@+id/swhtvMaxTimeStop"
+            android:textOn="#5ABEB4"
+            android:theme="@style/MySwitch"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_margin="10dp">
+
         <TextView
             android:id="@+id/tvProc2"
             android:layout_width="100dp"
@@ -140,7 +230,10 @@
             android:textSize="14sp"
             android:gravity="center_vertical"
             android:layout_weight="4"
-            android:text="При режиме START ток меньше"/>
+            android:layout_marginLeft="5dp"
+            android:text="При режиме START ток меньше"
+            android:layout_marginRight="5dp"/>
+
         <EditText
             android:id="@+id/etProc2"
             android:layout_width="10dp"
@@ -156,40 +249,61 @@
             android:gravity="center_vertical|right"
             android:textSize="14sp"
             android:text="%"
+            android:layout_marginRight="15dp"
             android:layout_weight="1"/>
+        <Switch
+            android:id="@+id/swhtvProc2"
+            android:textOn="#5ABEB4"
+            android:theme="@style/MySwitch"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"/>
     </LinearLayout>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="16sp"
         android:gravity="center"
-        android:text="Другие параметры"/>
+        android:text="Дополнительно"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_margin="10dp">
+
         <Switch
-            android:id="@+id/switchAutoQueryByDiscrepancy"
+            android:id="@+id/swhAutoQueryByDiscrepancy"
             android:textOn="#5ABEB4"
             android:theme="@style/MySwitch"
-            android:layout_width="match_parent"
+            android:layout_width="35dp"
             android:layout_height="15dp"
             android:layout_weight="4"
+            android:layout_marginLeft="5dp"
             android:textColor="@android:color/tertiary_text_dark"
             android:checked="false"
             android:textSize="14sp"
             android:text="Автоматический опрос при несоответствиях"/>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:orientation="horizontal"
+        android:layout_margin="10dp">
+
+
     </LinearLayout>
     <Button
+
         android:id="@+id/button1"
-        android:onClick="onClickSaveOptions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#5ABEB4"
-        android:textColor="#FFFFFF"
-        android:text="Сохранить"
         android:layout_margin="10dp"
-        android:elevation="4dp"/>
+        android:background="#5ABEB4"
+        android:elevation="4dp"
+        android:onClick="onClickSaveOptions"
+        android:text="Сохранить"
+        android:textColor="#FFFFFF" />
 
 </LinearLayout>
