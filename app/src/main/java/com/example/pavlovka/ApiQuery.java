@@ -59,7 +59,9 @@ public class ApiQuery {
             post = response.body().getBody();
             post1 = post;
             userFromBodySession = post.getUser();
-            strTFf = userFromBodySession.getIsAdmin();
+            if(userFromBodySession != null){
+                strTFf = userFromBodySession.getIsAdmin();
+            }
 
         } catch (IOException e) {
             Util.logsError(e.getMessage(),context);
@@ -173,16 +175,19 @@ public class ApiQuery {
     }
 
     public String isGetSession(Context context) {
+        String login = "", password = "";
         try {
+            login = Util.getProperty("login", context);
+            password = Util.getProperty("password", context);
             gSessionId = Util.getProperty("sessionId", context);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(gSessionId == null || gSessionId.equals("")) return AuthByLogin(context,"","");
+        if(gSessionId == null || gSessionId.equals("")) return AuthByLogin(context,login,password);
         if(AuthBySession(context)){
             return gSessionId;
         }
-        return AuthByLogin(context,"","");
+        return AuthByLogin(context,login,password);
     }
 
     public boolean AuthBySession(Context context)

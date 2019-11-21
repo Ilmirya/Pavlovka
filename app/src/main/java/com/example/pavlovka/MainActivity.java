@@ -45,8 +45,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Intent intentSignin = new Intent(this, SigninActivity.class);
-        startActivity(intentSignin);
+
         myProgressBar = findViewById(R.id.pbWatersLevel);
         tvMotor = findViewById(R.id.tvMotor);
         tvUPPMain = findViewById(R.id.tvUPPMain);
@@ -58,7 +57,22 @@ public class MainActivity extends AppCompatActivity {
         tvUpp = findViewById(R.id.tvUpp);
         tvTimeDataWls = findViewById(R.id.tvTimeDataWls);
         tvMonitoringWls = findViewById(R.id.tvMonitoringWls);
-
+        String login = "", password = "";
+        try {
+            login = Util.getProperty("login", this);
+            password = Util.getProperty("password", this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(login == null || password == null || login.equals("") || password.equals("")){
+            Intent intentSignin = new Intent(this, SigninActivity.class);
+            startActivityForResult(intentSignin, Const.Session);
+        }
+        else{
+            mainFunction();
+        }
+    }
+    private void mainFunction(){
         myService = new MyService();
         Intent intent1 = new Intent();
         PendingIntent pendingIntent = createPendingResult(1, intent1,0  );
@@ -73,14 +87,8 @@ public class MainActivity extends AppCompatActivity {
                 TcpIpWls();
             }
         }).start();
-        /*
-        es = Executors.newFixedThreadPool(1);
-
-        MyRun mr = new MyRun();
-
-        es.execute(mr);
-        */
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
@@ -130,6 +138,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if(resultCode == Const.Session){
+            mainFunction();
+        }
         if(resultCode == Const.ClosedService){
 
         }
