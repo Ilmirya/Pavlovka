@@ -57,8 +57,7 @@ public class MyService extends Service {
     private int gWls = -1;
     private boolean gIsMotorStart = false;
     private boolean gIsNotConnected = true;
-    private boolean gIsAdmin = false;
-
+    public boolean gIsAdmin = false, gIsAutoQueryByDiscrepancy = false;
     private int lastSendNotifId = -1;
 
     public MyService() {
@@ -111,7 +110,7 @@ public class MyService extends Service {
                             } catch (PendingIntent.CanceledException e) {
                                 e.printStackTrace();
                             }
-                            sendNotif(Const.notConnection, "", Const.notifNotConnecion);
+                            sendNotif(Const.notConnection, "", Const.notifNotConnecion, true);
                         }
                         gIsNotConnected = true;
                     }else{
@@ -135,11 +134,11 @@ public class MyService extends Service {
             },1000, 1000 * 40);
         }
     }
-    void sendNotif(String contentText, String contentInfo, int notfiId) {
+    void sendNotif(String contentText, String contentInfo, int notfiId, boolean isNotifOn) {
         if(lastSendNotifId == notfiId) return;
         lastSendNotifId = notfiId;
         Util.logsError(contentText,this);
-        if(isActivity) return;
+        if(isActivity || !isNotifOn) return;
         String CHANNEL_ID = "channel_01";
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             CharSequence name = "channel";
@@ -278,7 +277,7 @@ public class MyService extends Service {
         }
     }
     public void MainFunction(){
-        if(isEnterInFunc) return;
+        if(isEnterInFunc || countVisit > 2) return;
         countVisit++;
         isEnterInFunc = true;
         RecordsFromQueryDB[] records = ApiQuery.Instance().QueryFromDatabase(this);
@@ -325,14 +324,15 @@ public class MyService extends Service {
 
         Date dtTmp = new Date();
         double WLSmin2 = 9, WLSmax2 = 13.75, proc2 = 20, maxTimeStop = 30;
-        boolean isAutoQueryByDiscrepancy = false;
+        boolean isMaxTimeStop = false, isProc2 = false;
         try{
             maxTimeStop = Double.parseDouble(Util.getPropertyOrSetDefaultValue("maxTimeStop", "30",this));
             proc2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("Proc2", "20",this));
             WLSmin2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmin2", "9",this));
             WLSmax2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmax2", "13.75",this));
-            isAutoQueryByDiscrepancy = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("AutoQueryByDiscrepancy", "false",this));
-            gIsAdmin = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isAdmin", "false",this));
+            gIsAutoQueryByDiscrepancy = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("AutoQueryByDiscrepancy", "false",this));
+            isMaxTimeStop = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isMaxTimeStop", "false",this));
+            isProc2 = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isProc2", "false",this));
         }
         catch (Exception ex){
             ex.fillInStackTrace();
@@ -340,15 +340,15 @@ public class MyService extends Service {
 
         if(dtUppStop != null){
             if(Helper.getDateDiff(dtUppStop, dtTmp, TimeUnit.MINUTES) > maxTimeStop){
-                sendNotif("УПП находится в стопе более чем " + maxTimeStop + " мин", "", Const.notifMaxTimeStop);
+                sendNotif("УПП находится в стопе более чем " + maxTimeStop + " мин", "", Const.notifMaxTimeStop,isMaxTimeStop);
             }
         }
         if(isMotorStart && motorCurrent < proc2){
-            sendNotif("ток < " + proc2,"", Const.notifTokLessThanProc);
+            sendNotif("ток < " + proc2,"", Const.notifTokLessThanProc, isProc2);
         }
         else if((wls == 0 && height > 12.5)||(wls == 15 && height < 13.5)||(wls < 7 && height > 13.7)||(wls > 1 && height < 12)){
             if(countVisit < 2 && lastSendNotifId != Const.notifMismatchIdWlsAndHeightMoreThanProc){
-                if(isAutoQueryByDiscrepancy){
+                if(gIsAutoQueryByDiscrepancy){
                     if(ApiQuery.Instance().Poll(Const.objectIdWLS, "", "Current", this)){
                         try {
                             Thread.sleep(1000 * 3);
@@ -375,10 +375,8 @@ public class MyService extends Service {
             gIsMotorStart = isMotorStart;
             gHeight = height;
         }
-
         countVisit--;
     }
-
     public void sendInActive(RecordsFromQueryDB[] records){
         RecordsFromQueryDB recordUpp = Helper.GetLastRecordByType(records,"upp");
         RecordsFromQueryDB recordWls = Helper.GetLastRecordByType(records, "wls");
@@ -388,9 +386,7 @@ public class MyService extends Service {
         RecordsFromQueryDB recordLastStopTime = Helper.GetLastRecordByType(records, "lastStopTime");
         RecordsFromQueryDB recordMotorCurrent = Helper.GetLastRecordByType(records, "motorCurrent");
 
-        if(recordUpp == null || recordWls == null || recordHeight == null){
-            return;
-        }
+        if(recordUpp == null || recordWls == null || recordHeight == null) return;
 
         String strMotor = "насос\n", strUppSecondary = "";
 
@@ -435,7 +431,7 @@ public class MyService extends Service {
 
         double height = recordHeight.getD1d();
 
-        String strHeight = "\n\nВысота,м: " + formatDouble.format(height) +"\n";
+        String strHeight = "Высота,м: " + formatDouble.format(height) +"\n";
 
         strHeight += "Заполн,%: " + formatDouble.format(height * 100 / 14)+"\n";
 
@@ -459,7 +455,9 @@ public class MyService extends Service {
 
     public void VerificationMainFunction(){
         if(countVisit > 1) return;
-        if(!ApiQuery.Instance().Poll(Const.objectIdUpp, "", "Current", this)) return;
+        if(gIsAutoQueryByDiscrepancy){
+            if(!ApiQuery.Instance().Poll(Const.objectIdUpp, "", "Current", this)) return;
+        }
         RecordsFromQueryDB[] records = ApiQuery.Instance().QueryFromDatabase(this);
         if(records == null || records.length == 0){
             Intent intent = new Intent().putExtra("tvHeightWaters", "\n\n" + Const.ifDataNull);
@@ -468,7 +466,7 @@ public class MyService extends Service {
             } catch (PendingIntent.CanceledException e) {
                 e.printStackTrace();
             }
-            sendNotif(Const.ifDataNull, "", Const.notifDataNull);
+            sendNotif(Const.ifDataNull, "", Const.notifDataNull,true);
             return;
         }
         RecordsFromQueryDB recordsUpp = Helper.GetLastRecordByType(records,"upp");
@@ -482,7 +480,7 @@ public class MyService extends Service {
             } catch (PendingIntent.CanceledException e) {
                 e.printStackTrace();
             }
-            sendNotif(Const.ifDataNull, "", Const.notifDataNull);
+            sendNotif(Const.ifDataNull, "", Const.notifDataNull, true);
             return;
         }
         sendInActive(records);
@@ -501,7 +499,21 @@ public class MyService extends Service {
                 isMotorStart = false;
             }
         }
+        double WLSmin2 = 9, WLSmax2 = 13.75;
+        boolean isWlsLessThenWlsminAndStop = false, isWlsMoreThenWlsmaxAndStart = false, isWlsLessThenWLsmin2AndStart = false, isWlsMoreThenWlsmax2AndStart = false, isProc1 = false;
+        try{
+            WLSmin2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmin2", "9",this));
+            WLSmax2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmax2", "13.75",this));
 
+            isWlsLessThenWlsminAndStop = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWlsminAndStop", "false",this));
+            isWlsMoreThenWlsmaxAndStart=Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsMoreThenWlsmaxAndStart", "false",this));
+            isWlsLessThenWLsmin2AndStart = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWLsmin2AndStart", "false",this));
+            isWlsMoreThenWlsmax2AndStart = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsMoreThenWlsmax2AndStart", "false",this));
+            isProc1 = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isProc1", "false",this));
+        }
+        catch (Exception ex){
+            ex.fillInStackTrace();
+        }
         double height = recordsHeight.getD1d();
         int wls = (int)(recordsWls.getD1d());
 
@@ -511,17 +523,19 @@ public class MyService extends Service {
             gIsMotorStart = isMotorStart;
             contentText = "h: " + formatDouble.format(height) + "м; WLS: " + Integer.toBinaryString(wls) + " " + strMotor;
             if((height >  13.6 || wls >= 7) && isMotorStart){
-                if((height > 13.75 || wls > 7) && isMotorStart){
-                    sendNotif(contentText, "wls>wls_max2&&Start", Const.notifWlsMoreThanWlsmax2_Start);
+                if((height > WLSmax2 || wls == 15) && isMotorStart){
+                    sendNotif(contentText, "wls>wls_max2&&Start", Const.notifWlsMoreThanWlsmax2_Start, isWlsMoreThenWlsmax2AndStart);
                 }
                 else
-                    sendNotif(contentText, "wls>wls_max&&Start", Const.notifWlsMoreThanWlsmax_Start);
+                {
+                    sendNotif(contentText, "wls>wls_max&&Start", Const.notifWlsMoreThanWlsmax_Start, isWlsMoreThenWlsmaxAndStart);
+                }
             } else if((height <  12.4 || wls <= 1) && !isMotorStart){
-                    sendNotif(contentText, "wls<wls_min&&Stop", Const.notifWlsLessThanWlsmin_Stop);
-            } else if((height <  10 ) && isMotorStart){
-                sendNotif(contentText, "wls<wls_min2&&Start", Const.notifWlsLessThanWlsmin2_Start);
+                    sendNotif(contentText, "wls<wls_min&&Stop", Const.notifWlsLessThanWlsmin_Stop, isWlsLessThenWlsminAndStop);
+            } else if((height <  WLSmin2 ) && isMotorStart){
+                sendNotif(contentText, "wls<wls_min2&&Start", Const.notifWlsLessThanWlsmin2_Start, isWlsLessThenWLsmin2AndStart);
             } else if((wls == 0 && height > 12.5)||(wls == 15 && height < 13.5)||(wls < 7 && height > 13.7)||(wls > 1 && height < 12)){
-                sendNotif(contentText, "mismatch in wls and height more than proc", Const.notifMismatchIdWlsAndHeightMoreThanProc);
+                sendNotif(contentText, "mismatch in wls and height more than proc", Const.notifMismatchIdWlsAndHeightMoreThanProc, isProc1);
             } else {
                 Util.logsInfo("h: " + formatDouble.format(height) + "м; WLS: " + Integer.toBinaryString(wls) + "; " + strMotor,this);
                 countVisit--;

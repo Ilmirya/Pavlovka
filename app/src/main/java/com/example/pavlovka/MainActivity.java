@@ -164,8 +164,6 @@ public class MainActivity extends AppCompatActivity {
     // sends message received notifications
 
     Executor es;
-    //DataOutputStream out;
-    private boolean mRun = false;
     public void sendMessage() {
         Runnable runnable = new Runnable() {
             @Override
@@ -212,7 +210,6 @@ public class MainActivity extends AppCompatActivity {
             socket = new Socket(InetAddress.getByName(Const.IpAddressWls), Const.wlsPort);
             mBufferOut = new DataOutputStream(socket.getOutputStream());
 
-            //receives the message which the server sends back
             DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
             mBufferIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             float height = 0, pressure;
@@ -288,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        String strMotor = "насос\n", strUppSecondary = "", strHeight = "\n\n";
+        String strMotor = "насос\n", strUppSecondary = "";
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         final String strLastUpdate = "время обновления: " + simpleDateFormat.format(recordsUpp.getDateDt());
@@ -331,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
 
         double height = recordsHeight.getD1d();
 
-        strHeight += "Высота,м: " + formatDouble.format(height)+"\n";
+        String strHeight = "Высота,м: " + formatDouble.format(height)+"\n";
 
         double percent = height*100/14;
         strHeight += "Заполн,%: " + formatDouble.format(percent)+"\n";
