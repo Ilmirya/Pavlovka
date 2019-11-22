@@ -6,7 +6,7 @@
         android:id="@+id/CustomizableOptionsActivity"
         android:icon="@android:drawable/ic_menu_info_details"
         navigationdrawer:showAsAction="never"
-        android:title="Настраиваемые параметры">
+        android:title="Параметры">
     </item>
     <item
         android:id="@+id/LogsActivity"

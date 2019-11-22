@@ -4,19 +4,26 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:layout_margin = "10dp">
 
-    <TextView
-        android:id="@+id/tvLogs"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center_horizontal"
-        android:drawableEnd="@color/colorPrimary"
-        android:textColor="#632182"
-        android:textSize="14sp"
-        android:layout_marginRight="4dp"
-        android:textStyle="bold"
-        android:isScrollContainer="true"
-        android:gravity="left"/>
+        android:id="@+id/scrLogs">
+
+        <TextView
+            android:id="@+id/tvLogs"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:drawableEnd="@color/colorPrimary"
+            android:textColor="#632182"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:isScrollContainer="true"
+            android:gravity="left"/>
+
+    </ScrollView>
 
 </LinearLayout>
