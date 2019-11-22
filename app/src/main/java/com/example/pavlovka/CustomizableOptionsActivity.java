@@ -11,7 +11,8 @@ import java.io.IOException;
 
 public class CustomizableOptionsActivity extends AppCompatActivity {
     private EditText etWLSmin2, etWLSmax2, etProc1, etMaxTimeStop, etProc2;
-    private Switch swhAutoQueryByDiscrepancy, swhWlsLessThenWlsminAndStop, swhWlsMoreThenWlsmaxAndStart, swhWlsLessThenWLsmin2AndStart, swhWlsMoreThenWlsmax2AndStart, swhProc1, swhMaxTimeStop, swhProc2;
+    private Switch swhAutoQueryByDiscrepancy, swhWlsLessThenWlsminAndStop, swhWlsMoreThenWlsmaxAndStart,
+            swhWlsLessThenWLsmin2AndStart, swhWlsMoreThenWlsmax2AndStart, swhProc1, swhMaxTimeStop, swhProc2,swhDataNull,swhNotConnection;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +34,8 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         swhProc1 = findViewById(R.id.swhProc1);
         swhMaxTimeStop = findViewById(R.id.swhMaxTimeStop);
         swhProc2 = findViewById(R.id.swhProc2);
+        swhDataNull = findViewById(R.id.swhDataNull);
+        swhNotConnection = findViewById(R.id.swhNotConnection);
 
         try {
             swhWlsLessThenWlsminAndStop.setChecked(Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWlsminAndStop", "false",this)));
@@ -42,6 +45,8 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
             swhProc1.setChecked(Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isProc1", "false",this)));
             swhMaxTimeStop.setChecked(Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isMaxTimeStop", "false",this)));
             swhProc2.setChecked(Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isProc2", "false",this)));
+            swhDataNull.setChecked(Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isDataNull", "false",this)));
+            swhNotConnection.setChecked(Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isNotConnection", "false",this)));
 
             swhAutoQueryByDiscrepancy.setChecked(Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("AutoQueryByDiscrepancy", "false",this)));
             etWLSmin2.setText(Util.getPropertyOrSetDefaultValue("WLSmin2", "9",this));
@@ -67,6 +72,8 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
             Util.setPropertyConfig("isProc1", Boolean.toString(swhProc1.isChecked()), this);
             Util.setPropertyConfig("isMaxTimeStop", Boolean.toString(swhMaxTimeStop.isChecked()), this);
             Util.setPropertyConfig("isProc2", Boolean.toString(swhProc2.isChecked()), this);
+            Util.setPropertyConfig("isDataNull", Boolean.toString(swhDataNull.isChecked()), this);
+            Util.setPropertyConfig("isNotConnection", Boolean.toString(swhNotConnection.isChecked()), this);
 
             Util.setPropertyConfig("AutoQueryByDiscrepancy", Boolean.toString(swhAutoQueryByDiscrepancy.isChecked()), this);
             Util.setPropertyConfig("WLSmin2", etWLSmin2.getText().toString(),this);

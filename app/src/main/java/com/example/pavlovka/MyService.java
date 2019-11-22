@@ -110,7 +110,14 @@ public class MyService extends Service {
                             } catch (PendingIntent.CanceledException e) {
                                 e.printStackTrace();
                             }
-                            sendNotif(Const.notConnection, "", Const.notifNotConnecion, true);
+                            boolean isNotConnection = false;
+                            try{
+                                isNotConnection = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isNotConnection", "false",MyService.this));
+                            }
+                            catch (Exception ex){
+                                ex.fillInStackTrace();
+                            }
+                            sendNotif(Const.notConnection, "", Const.notifNotConnecion, isNotConnection);
                         }
                         gIsNotConnected = true;
                     }else{
@@ -458,6 +465,25 @@ public class MyService extends Service {
         if(gIsAutoQueryByDiscrepancy){
             if(!ApiQuery.Instance().Poll(Const.objectIdUpp, "", "Current", this)) return;
         }
+        double WLSmin2 = 9, WLSmax2 = 13.75;
+        boolean isWlsLessThenWlsminAndStop = false, isWlsMoreThenWlsmaxAndStart = false, isWlsLessThenWLsmin2AndStart = false,
+                isWlsMoreThenWlsmax2AndStart = false, isProc1 = false, isDataNull = false, isNotConnection = false;
+        try{
+            WLSmin2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmin2", "9",this));
+            WLSmax2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmax2", "13.75",this));
+
+            isDataNull = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isDataNull", "false",this));
+            isNotConnection = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isNotConnection", "false",this));
+
+            isWlsLessThenWlsminAndStop = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWlsminAndStop", "false",this));
+            isWlsMoreThenWlsmaxAndStart=Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsMoreThenWlsmaxAndStart", "false",this));
+            isWlsLessThenWLsmin2AndStart = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWLsmin2AndStart", "false",this));
+            isWlsMoreThenWlsmax2AndStart = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsMoreThenWlsmax2AndStart", "false",this));
+            isProc1 = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isProc1", "false",this));
+        }
+        catch (Exception ex){
+            ex.fillInStackTrace();
+        }
         RecordsFromQueryDB[] records = ApiQuery.Instance().QueryFromDatabase(this);
         if(records == null || records.length == 0){
             Intent intent = new Intent().putExtra("tvHeightWaters", "\n\n" + Const.ifDataNull);
@@ -466,7 +492,7 @@ public class MyService extends Service {
             } catch (PendingIntent.CanceledException e) {
                 e.printStackTrace();
             }
-            sendNotif(Const.ifDataNull, "", Const.notifDataNull,true);
+            sendNotif(Const.ifDataNull, "", Const.notifDataNull,isDataNull);
             return;
         }
         RecordsFromQueryDB recordsUpp = Helper.GetLastRecordByType(records,"upp");
@@ -480,7 +506,7 @@ public class MyService extends Service {
             } catch (PendingIntent.CanceledException e) {
                 e.printStackTrace();
             }
-            sendNotif(Const.ifDataNull, "", Const.notifDataNull, true);
+            sendNotif(Const.ifDataNull, "", Const.notifDataNull, isDataNull);
             return;
         }
         sendInActive(records);
@@ -499,21 +525,7 @@ public class MyService extends Service {
                 isMotorStart = false;
             }
         }
-        double WLSmin2 = 9, WLSmax2 = 13.75;
-        boolean isWlsLessThenWlsminAndStop = false, isWlsMoreThenWlsmaxAndStart = false, isWlsLessThenWLsmin2AndStart = false, isWlsMoreThenWlsmax2AndStart = false, isProc1 = false;
-        try{
-            WLSmin2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmin2", "9",this));
-            WLSmax2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmax2", "13.75",this));
 
-            isWlsLessThenWlsminAndStop = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWlsminAndStop", "false",this));
-            isWlsMoreThenWlsmaxAndStart=Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsMoreThenWlsmaxAndStart", "false",this));
-            isWlsLessThenWLsmin2AndStart = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWLsmin2AndStart", "false",this));
-            isWlsMoreThenWlsmax2AndStart = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsMoreThenWlsmax2AndStart", "false",this));
-            isProc1 = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isProc1", "false",this));
-        }
-        catch (Exception ex){
-            ex.fillInStackTrace();
-        }
         double height = recordsHeight.getD1d();
         int wls = (int)(recordsWls.getD1d());
 
