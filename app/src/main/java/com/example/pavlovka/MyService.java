@@ -6,7 +6,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.TaskStackBuilder;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.RingtoneManager;
@@ -16,13 +15,11 @@ import android.os.IBinder;
 import androidx.core.app.NotificationCompat;
 
 import com.example.pavlovka.POJO.BodyForSignalR.ListUpdateBody;
-import com.example.pavlovka.POJO.BodyForSignalR.PollBody;
 import com.example.pavlovka.POJO.Message;
 import com.example.pavlovka.POJO.QueryFromDatabase.RecordsFromQueryDB;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -42,11 +39,8 @@ import microsoft.aspnet.signalr.client.http.android.AndroidPlatformComponent;
 
 public class MyService extends Service {
     public Gson gson = new Gson();
-
-    NotificationManager notificationManager;// = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-    private static final int NOTIF_ID = 1;
-    private static final String NOTIF_CHANNEL_ID = "Channel_Id";
-    public String gSessionId = "";
+    NotificationManager notificationManager;
+    private String gSessionId = "";
     public PendingIntent pendingIntent;
     ExecutorService es;
     Timer timer = new Timer();
@@ -58,11 +52,12 @@ public class MyService extends Service {
     private boolean isPingOk = false;
     private Date dtUppStop;
 
+    private NumberFormat formatDouble = new DecimalFormat("#00.00");
     private double gHeight = -1;
     private int gWls = -1;
     private boolean gIsMotorStart = false;
     private boolean gIsNotConnected = true;
-
+    public boolean gIsAdmin = false, gIsAutoQueryByDiscrepancy = false;
     private int lastSendNotifId = -1;
 
     public MyService() {
@@ -81,8 +76,7 @@ public class MyService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         pendingIntent = intent.getParcelableExtra("pendingIntent");
         if(pendingIntent != null){
-            MyRun mr = new MyRun(startId, pendingIntent,  this);
-
+            MyRun mr = new MyRun();
             es.execute(mr);
             startForeground();
         }
@@ -92,7 +86,7 @@ public class MyService extends Service {
         Intent notificationIntent = new Intent(this, MainActivity.class);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        Notification notification = new NotificationCompat.Builder(this, NOTIF_CHANNEL_ID) // don't forget create a notification channel first
+        Notification notification = new NotificationCompat.Builder(this, "ChannelId") // don't forget create a notification channel first
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setOngoing(true)
                 .setContentTitle(getString(R.string.app_name))
@@ -100,26 +94,14 @@ public class MyService extends Service {
                 .setContentIntent(pendingIntent)
                 .build();
 
-        startForeground(NOTIF_ID, notification);
+        startForeground(1, notification);
     }
     class MyRun implements Runnable {
-
-        int startId;
-        PendingIntent pi;
-        Context context;
-
-        public MyRun(int startId, PendingIntent pi, Context context) {
-            this.startId = startId;
-            this.pi = pi;
-            this.context = context;
-        }
         public void run() {
-            int period = 1000 * 60 * 5;
-
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    gSessionId = ApiQuery.Instance().isGetSession(context);
+                    gSessionId = ApiQuery.Instance().isGetSession(MyService.this);
                     if(gSessionId == null || gSessionId == ""){
                         if(gIsNotConnected){
                             Intent intent = new Intent().putExtra("tvHeightWaters", Const.notConnection);
@@ -128,36 +110,35 @@ public class MyService extends Service {
                             } catch (PendingIntent.CanceledException e) {
                                 e.printStackTrace();
                             }
-                            sendNotif(Const.notConnection, "", Const.notifNotConnecion);
+                            sendNotif(Const.notConnection, "", Const.notifNotConnecion, true);
                         }
                         gIsNotConnected = true;
                     }else{
-                        boolean pok = isPingOk;
-                        isPingOk = false;
-                        if ((connection == null) || (connection.getState() != ConnectionState.Connected)||(!pok))
+                        if ((connection == null) || (connection.getState() != ConnectionState.Connected)||(!isPingOk))
                         {
                             Subscribe();
                         }
+                        isPingOk = false;
                         countVisit = 0;
                         gIsNotConnected = false;
                         MainFunction();
                     }
                 }
-            },0, period);
+            },0, 1000 * 60 * 5);
 
             timer1.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     isEnterInFunc = false;
                 }
-            },1000, 1000 * 30);
+            },1000, 1000 * 40);
         }
     }
-    void sendNotif(String contentText, String contentInfo, int notfiId) {
+    void sendNotif(String contentText, String contentInfo, int notfiId, boolean isNotifOn) {
         if(lastSendNotifId == notfiId) return;
         lastSendNotifId = notfiId;
         Util.logsError(contentText,this);
-        if(isActivity) return;
+        if(isActivity || !isNotifOn) return;
         String CHANNEL_ID = "channel_01";
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             CharSequence name = "channel";
@@ -198,7 +179,7 @@ public class MyService extends Service {
         super.onDestroy();
         Intent intent = new Intent().putExtra("tvHeightWaters", Const.notConnection);
         try {
-            pendingIntent.send(MyService.this,Const.ClosedService,intent);
+            pendingIntent.send(MyService.this, Const.ClosedService, intent);
         } catch (PendingIntent.CanceledException e) {
             e.printStackTrace();
         }
@@ -220,7 +201,7 @@ public class MyService extends Service {
                 connection.reconnected(new Runnable() {
                     @Override
                     public void run() {
-                        ApiQuery.Instance().SignalBind(connection.getConnectionId());
+                        ApiQuery.Instance().SignalBind(connection.getConnectionId(),MyService.this);
                     }
                 });
 
@@ -239,17 +220,17 @@ public class MyService extends Service {
                 connection.received(new MessageReceivedHandler() {
                     @Override
                     public void onMessageReceived(final JsonElement jsonElement) {
-                        Tmp(jsonElement);
+                        ReceivedSignalR(jsonElement);
                     }
                 });
             }
             TryToConnect();
         }
         catch (Exception ex){
-            ex.fillInStackTrace();
+            Util.logsError(ex.getMessage(),this);
         }
     }
-    public void Tmp(JsonElement e)
+    public void ReceivedSignalR(JsonElement e)
     {
         Message message = gson.fromJson(e, Message.class);;
         Object body = message.getBody();
@@ -257,15 +238,7 @@ public class MyService extends Service {
         if(what.equals("ping")){
             isPingOk = true;
         }
-        if(what.equals("poll")){
-            String tmp1 = gson.toJson(body);
-            PollBody pollBody1 = gson.fromJson(tmp1, PollBody.class) ;
-            String[] objectIds = pollBody1.getObjectIds();
-            if(objectIds[0].equals(Const.objectIdUpp)){
-                Object arg = pollBody1.getArg();
-            }
-        }
-        if(what.equals("ListUpdate")){
+        else if(what.equals("ListUpdate")){
             String tmp1 = gson.toJson(body);
             ListUpdateBody listUpdateBody = gson.fromJson(tmp1, ListUpdateBody.class) ;
             String[] ids = listUpdateBody.getIds();
@@ -293,21 +266,21 @@ public class MyService extends Service {
                 connection.connected(new Runnable() {
                     @Override
                     public void run() {
-                        ApiQuery.Instance().SignalBind(connection.getConnectionId());
+                        ApiQuery.Instance().SignalBind(connection.getConnectionId(), MyService.this);
                     }
                 });
                 connection.start();
             }
         }
         catch (Exception ex){
-            ex.fillInStackTrace();
+            Util.logsError(ex.getMessage(),this);
         }
     }
     public void MainFunction(){
-        if(isEnterInFunc) return;
+        if(isEnterInFunc || countVisit > 2) return;
         countVisit++;
         isEnterInFunc = true;
-        RecordsFromQueryDB[] records = ApiQuery.Instance().QueryFromDatabase();
+        RecordsFromQueryDB[] records = ApiQuery.Instance().QueryFromDatabase(this);
         RecordsFromQueryDB recordUpp, recordWls, recordHeight, recordMotorCurrent;
         if(records == null || records.length == 0){
             VerificationMainFunction();
@@ -330,13 +303,12 @@ public class MyService extends Service {
         for(String uppTmp : arrUpp){
             String[] arrTmp = uppTmp.split("=");
             if(!arrTmp[0].equals("мотор")) continue;
+            strMotor += arrTmp[1].toLowerCase();
             if(arrTmp[1].equals("START")){
-                strMotor += "start";
                 isMotorStart = true;
                 dtUppStop = null;
             }
             else {
-                strMotor += "stop";
                 isMotorStart = false;
                 if(dtUppStop == null){
                     dtUppStop = new Date();
@@ -352,30 +324,32 @@ public class MyService extends Service {
 
         Date dtTmp = new Date();
         double WLSmin2 = 9, WLSmax2 = 13.75, proc2 = 20, maxTimeStop = 30;
-        boolean isAutoQueryWls = false;
+        boolean isMaxTimeStop = false, isProc2 = false;
         try{
             maxTimeStop = Double.parseDouble(Util.getPropertyOrSetDefaultValue("maxTimeStop", "30",this));
             proc2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("Proc2", "20",this));
             WLSmin2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmin2", "9",this));
             WLSmax2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmax2", "13.75",this));
-            isAutoQueryWls = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("AutoQueryByDiscrepancy", "false",this));
+            gIsAutoQueryByDiscrepancy = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("AutoQueryByDiscrepancy", "false",this));
+            isMaxTimeStop = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isMaxTimeStop", "false",this));
+            isProc2 = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isProc2", "false",this));
         }
         catch (Exception ex){
             ex.fillInStackTrace();
         }
 
         if(dtUppStop != null){
-            if(getDateDiff(dtUppStop, dtTmp, TimeUnit.MINUTES) > maxTimeStop){
-                sendNotif("УПП находится в стопе более чем " + maxTimeStop + " мин", "", Const.notifMaxTimeStop);
+            if(Helper.getDateDiff(dtUppStop, dtTmp, TimeUnit.MINUTES) > maxTimeStop){
+                sendNotif("УПП находится в стопе более чем " + maxTimeStop + " мин", "", Const.notifMaxTimeStop,isMaxTimeStop);
             }
         }
         if(isMotorStart && motorCurrent < proc2){
-            sendNotif("ток < " + proc2,"", Const.notifTokLessThanProc);
+            sendNotif("ток < " + proc2,"", Const.notifTokLessThanProc, isProc2);
         }
-        if((wls == 0 && height > 12.5)||(wls == 15 && height < 13.5)||(wls < 7 && height > 13.7)||(wls > 1 && height < 12)){
+        else if((wls == 0 && height > 12.5)||(wls == 15 && height < 13.5)||(wls < 7 && height > 13.7)||(wls > 1 && height < 12)){
             if(countVisit < 2 && lastSendNotifId != Const.notifMismatchIdWlsAndHeightMoreThanProc){
-                if(isAutoQueryWls){
-                    if(ApiQuery.Instance().Poll(Const.objectIdWLS, "", "Current")){
+                if(gIsAutoQueryByDiscrepancy){
+                    if(ApiQuery.Instance().Poll(Const.objectIdWLS, "", "Current", this)){
                         try {
                             Thread.sleep(1000 * 3);
                         } catch (InterruptedException e) {
@@ -389,40 +363,30 @@ public class MyService extends Service {
             }
             return;
         }
-        if(((height >  13.6 || wls >= 7) && isMotorStart) || ((height <  12.4 || wls <= 1) && !isMotorStart) ||
+        else if(((height >  13.6 || wls >= 7) && isMotorStart) || ((height <  12.4 || wls <= 1) && !isMotorStart) ||
                 ((height <  WLSmin2 ) && isMotorStart) || ((height > WLSmax2 || wls == 15) && isMotorStart)){
             VerificationMainFunction();
             return;
         }
 
         if(gWls == -1 || gHeight == -1 || gWls != wls || gHeight != height || gIsMotorStart != isMotorStart){
-            NumberFormat formatDouble = new DecimalFormat("#00.00");
             Util.logsInfo("h: " + formatDouble.format(height) + "м; WLS: " + Integer.toBinaryString(wls) + "; " + strMotor,this);
             gWls = wls;
             gIsMotorStart = isMotorStart;
             gHeight = height;
         }
-
         countVisit--;
     }
-
-    public static long getDateDiff(Date dtOld , Date dtNew, TimeUnit timeUnit) {
-        long diffInMillies = dtNew.getTime() - dtOld.getTime();
-        return timeUnit.convert(diffInMillies,TimeUnit.MILLISECONDS);
-    }
     public void sendInActive(RecordsFromQueryDB[] records){
-        RecordsFromQueryDB recordUpp, recordWls, recordHeight, recordCurrentPhaseMax, recordLastStartTime, recordLastStopTime, recordMotorCurrent;
-        recordUpp = Helper.GetLastRecordByType(records,"upp");
-        recordWls = Helper.GetLastRecordByType(records, "wls");
-        recordHeight = Helper.GetLastRecordByType(records, "высота");
-        recordCurrentPhaseMax = Helper.GetLastRecordByType(records, "currentPhaseMax");
-        recordLastStartTime = Helper.GetLastRecordByType(records, "lastStartTime");
-        recordLastStopTime = Helper.GetLastRecordByType(records, "lastStopTime");
-        recordMotorCurrent = Helper.GetLastRecordByType(records, "motorCurrent");
+        RecordsFromQueryDB recordUpp = Helper.GetLastRecordByType(records,"upp");
+        RecordsFromQueryDB recordWls = Helper.GetLastRecordByType(records, "wls");
+        RecordsFromQueryDB recordHeight = Helper.GetLastRecordByType(records, "высота");
+        RecordsFromQueryDB recordCurrentPhaseMax = Helper.GetLastRecordByType(records, "currentPhaseMax");
+        RecordsFromQueryDB recordLastStartTime = Helper.GetLastRecordByType(records, "lastStartTime");
+        RecordsFromQueryDB recordLastStopTime = Helper.GetLastRecordByType(records, "lastStopTime");
+        RecordsFromQueryDB recordMotorCurrent = Helper.GetLastRecordByType(records, "motorCurrent");
 
-        if(recordUpp == null || recordWls == null || recordHeight == null){
-            return;
-        }
+        if(recordUpp == null || recordWls == null || recordHeight == null) return;
 
         String strMotor = "насос\n", strUppSecondary = "";
 
@@ -445,7 +409,7 @@ public class MyService extends Service {
                     }
                     break;
                 case "Auto mode":
-                    strUppSecondary += "Auto mode: " + arrTmp[1] + ".\n";
+                    strUppSecondary += "Auto mode: " + arrTmp[1] + "\n";
                     break;
                 case "Fault":
                     strUppSecondary += "Fault: " + arrTmp[1] + "\n";
@@ -461,14 +425,13 @@ public class MyService extends Service {
                     break;
             }
         }
-        NumberFormat formatDouble = new DecimalFormat("#00.00");
 
         String strUppMain = recordCurrentPhaseMax != null ? ("Макс.ток фаз,A:\n" + recordCurrentPhaseMax.getD1s() + "\n") : "undefined\n";
         strUppMain += recordMotorCurrent != null ? ("% от номинала:\n" + recordMotorCurrent.getD1s()) : "undefined";
 
         double height = recordHeight.getD1d();
 
-        String strHeight = "\n\nВысота,м: " + formatDouble.format(height) +"\n";
+        String strHeight = "Высота,м: " + formatDouble.format(height) +"\n";
 
         strHeight += "Заполн,%: " + formatDouble.format(height * 100 / 14)+"\n";
 
@@ -492,9 +455,10 @@ public class MyService extends Service {
 
     public void VerificationMainFunction(){
         if(countVisit > 1) return;
-        if(!ApiQuery.Instance().Poll(Const.objectIdUpp, "", "Current")) return;
-        RecordsFromQueryDB[] records = ApiQuery.Instance().QueryFromDatabase();
-        RecordsFromQueryDB recordsUpp, recordsWls, recordsHeight;
+        if(gIsAutoQueryByDiscrepancy){
+            if(!ApiQuery.Instance().Poll(Const.objectIdUpp, "", "Current", this)) return;
+        }
+        RecordsFromQueryDB[] records = ApiQuery.Instance().QueryFromDatabase(this);
         if(records == null || records.length == 0){
             Intent intent = new Intent().putExtra("tvHeightWaters", "\n\n" + Const.ifDataNull);
             try {
@@ -502,12 +466,12 @@ public class MyService extends Service {
             } catch (PendingIntent.CanceledException e) {
                 e.printStackTrace();
             }
-            sendNotif(Const.ifDataNull, "", Const.notifDataNull);
+            sendNotif(Const.ifDataNull, "", Const.notifDataNull,true);
             return;
         }
-        recordsUpp = Helper.GetLastRecordByType(records,"upp");
-        recordsWls = Helper.GetLastRecordByType(records, "wls");
-        recordsHeight = Helper.GetLastRecordByType(records, "высота");
+        RecordsFromQueryDB recordsUpp = Helper.GetLastRecordByType(records,"upp");
+        RecordsFromQueryDB recordsWls = Helper.GetLastRecordByType(records, "wls");
+        RecordsFromQueryDB recordsHeight = Helper.GetLastRecordByType(records, "высота");
 
         if(recordsUpp == null || recordsWls == null || recordsHeight == null){
             Intent intent = new Intent().putExtra("tvHeightWaters", "\n\n" + Const.ifDataNull);
@@ -516,7 +480,7 @@ public class MyService extends Service {
             } catch (PendingIntent.CanceledException e) {
                 e.printStackTrace();
             }
-            sendNotif(Const.ifDataNull, "", Const.notifDataNull);
+            sendNotif(Const.ifDataNull, "", Const.notifDataNull, true);
             return;
         }
         sendInActive(records);
@@ -535,10 +499,22 @@ public class MyService extends Service {
                 isMotorStart = false;
             }
         }
-        NumberFormat formatDouble = new DecimalFormat("#00.00");
+        double WLSmin2 = 9, WLSmax2 = 13.75;
+        boolean isWlsLessThenWlsminAndStop = false, isWlsMoreThenWlsmaxAndStart = false, isWlsLessThenWLsmin2AndStart = false, isWlsMoreThenWlsmax2AndStart = false, isProc1 = false;
+        try{
+            WLSmin2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmin2", "9",this));
+            WLSmax2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmax2", "13.75",this));
 
+            isWlsLessThenWlsminAndStop = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWlsminAndStop", "false",this));
+            isWlsMoreThenWlsmaxAndStart=Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsMoreThenWlsmaxAndStart", "false",this));
+            isWlsLessThenWLsmin2AndStart = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWLsmin2AndStart", "false",this));
+            isWlsMoreThenWlsmax2AndStart = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsMoreThenWlsmax2AndStart", "false",this));
+            isProc1 = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isProc1", "false",this));
+        }
+        catch (Exception ex){
+            ex.fillInStackTrace();
+        }
         double height = recordsHeight.getD1d();
-
         int wls = (int)(recordsWls.getD1d());
 
         if(gWls == -1 || gHeight == -1 || gWls != wls || gHeight != height || gIsMotorStart != isMotorStart){
@@ -547,17 +523,19 @@ public class MyService extends Service {
             gIsMotorStart = isMotorStart;
             contentText = "h: " + formatDouble.format(height) + "м; WLS: " + Integer.toBinaryString(wls) + " " + strMotor;
             if((height >  13.6 || wls >= 7) && isMotorStart){
-                if((height > 13.75 || wls > 7) && isMotorStart){
-                    sendNotif(contentText, "wls>wls_max2&&Start", Const.notifWlsMoreThanWlsmax2_Start);
+                if((height > WLSmax2 || wls == 15) && isMotorStart){
+                    sendNotif(contentText, "wls>wls_max2&&Start", Const.notifWlsMoreThanWlsmax2_Start, isWlsMoreThenWlsmax2AndStart);
                 }
                 else
-                    sendNotif(contentText, "wls>wls_max&&Start", Const.notifWlsMoreThanWlsmax_Start);
+                {
+                    sendNotif(contentText, "wls>wls_max&&Start", Const.notifWlsMoreThanWlsmax_Start, isWlsMoreThenWlsmaxAndStart);
+                }
             } else if((height <  12.4 || wls <= 1) && !isMotorStart){
-                    sendNotif(contentText, "wls<wls_min&&Stop", Const.notifWlsLessThanWlsmin_Stop);
-            } else if((height <  10 ) && isMotorStart){
-                sendNotif(contentText, "wls<wls_min2&&Start", Const.notifWlsLessThanWlsmin2_Start);
+                    sendNotif(contentText, "wls<wls_min&&Stop", Const.notifWlsLessThanWlsmin_Stop, isWlsLessThenWlsminAndStop);
+            } else if((height <  WLSmin2 ) && isMotorStart){
+                sendNotif(contentText, "wls<wls_min2&&Start", Const.notifWlsLessThanWlsmin2_Start, isWlsLessThenWLsmin2AndStart);
             } else if((wls == 0 && height > 12.5)||(wls == 15 && height < 13.5)||(wls < 7 && height > 13.7)||(wls > 1 && height < 12)){
-                sendNotif(contentText, "mismatch in wls and height more than proc", Const.notifMismatchIdWlsAndHeightMoreThanProc);
+                sendNotif(contentText, "mismatch in wls and height more than proc", Const.notifMismatchIdWlsAndHeightMoreThanProc, isProc1);
             } else {
                 Util.logsInfo("h: " + formatDouble.format(height) + "м; WLS: " + Integer.toBinaryString(wls) + "; " + strMotor,this);
                 countVisit--;

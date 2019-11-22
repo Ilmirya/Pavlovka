@@ -15,7 +15,6 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.lang.String;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -32,88 +31,41 @@ public class ApiQuery {
     public Gson gson = new Gson();
     public String gSessionId = "";
 
-    private Message Message(String what, Object body){
-        Message message = new Message();
-        message.setHead(what, gSessionId);
-        message.setBody(body);
-        return message;
-    }
-
-    BodyFromSession post1 = new BodyFromSession();
-    UserFromBodySession userFromBodySession = new UserFromBodySession();
-    String strTFf;
+    boolean isAdmin = false;
     public String AuthByLogin(Context context, String login, String password){
         SessionJson sessionJson = new SessionJson();
         sessionJson.setWhat("auth-by-login");
-        sessionJson.setLoginPassword(login, Util.getMd5(password));
+        sessionJson.setLoginPassword(login, Helper.getMd5(password));
 
         String json = gson.toJson(sessionJson);
-        strTFf = json;
         Call<SessionJson> call = NetworkService.Instance().getMxApi().getSessionId(json);
-        BodyFromSession post = new BodyFromSession();
         try {
             Response<SessionJson> response = call.execute();
             if(!response.isSuccessful()){
                 return "";
             }
-            post = response.body().getBody();
-            post1 = post;
-            userFromBodySession = post.getUser();
+            BodyFromSession post = response.body().getBody();
+            UserFromBodySession userFromBodySession = post.getUser();
             if(userFromBodySession != null){
-                strTFf = userFromBodySession.getIsAdmin();
+                String strIsAdmin = userFromBodySession.getIsAdmin();
+                if(strIsAdmin == null || strIsAdmin.equals("false")){
+                    isAdmin = false;
+                }
+                else {
+                    isAdmin = true;
+                }
             }
-
+            gSessionId = post.getSessionId();
+            Util.setPropertyConfig("sessionId", gSessionId, context);
+            Util.setPropertyConfig("isAdmin", Boolean.toString(isAdmin), context);
+            return post.getSessionId();
         } catch (IOException e) {
             Util.logsError(e.getMessage(),context);
         }
-        gSessionId = post.getSessionId();
-        try {
-            Util.setPropertyConfig("sessionId", gSessionId, context);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return post.getSessionId();
+       return "";
     }
 
-    /*
-    public String AuthByLogin(Context context){
-        GetSessionId getSessionId = new GetSessionId();
-        getSessionId.setLoginPassword("admin", "7472ee515fd6610cf741dccee9abef5a");
-
-        String json = gson.toJson(Message("auth-by-login", getSessionId));
-        Call<Message> call = NetworkService.Instance().getMxApi().message(json);
-        GetSessionId post = new GetSessionId();
-        try {
-            Response<Message> response = call.execute();
-            if(!response.isSuccessful()){
-                return "";
-            }
-            String json1 = gson.toJson(response.body().getBody());
-            post = gson.fromJson(json1, GetSessionId.class) ;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        gSessionId = post.getSessionId();
-        try {
-            Util.setPropertyConfig("sessionId", gSessionId, context);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return post.getSessionId();
-    }
-*/
-    public void SignalBind(String connectionId){
-        SignalBind signalBind = new SignalBind();
-        signalBind.setConnectionId(connectionId);
-        String json = gson.toJson(Message("signal-bind",signalBind));
-        try {
-            NetworkService.Instance().getMxApi().message(json).execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public Message MessageExecute (String what, Object body){
+    public Message MessageExecute (String what, Object body, Context context){
         Message message = new Message();
         message.setHead(what, gSessionId);
         message.setBody(body);
@@ -122,21 +74,25 @@ public class ApiQuery {
         Call<Message> call = NetworkService.Instance().getMxApi().message(json);
         try {
             Response<Message> response = call.execute();
-            if(!response.isSuccessful()){
-                return null;
-            }
+            if(!response.isSuccessful()) return null;
             answerMessage = response.body();
-
         } catch (IOException e) {
-            e.printStackTrace();
+            Util.logsError(e.getMessage(),context);
         }
         return answerMessage;
     }
 
-    public Boolean Poll(String objectId, String cmd, String components){
+    public void SignalBind(String connectionId, Context context){
+        SignalBind signalBind = new SignalBind();
+        signalBind.setConnectionId(connectionId);
+        MessageExecute("signal-bin", signalBind, context);
+    }
+
+    public Boolean Poll(String objectId, String cmd, String components, Context context){
+        if(!isAdmin) return true;
         Poll poll = new Poll();
         poll.setPoll1(new String[]{objectId}, cmd, components);
-        Message answer = MessageExecute("poll", poll);
+        Message answer = MessageExecute("poll", poll, context);
         if(answer == null) return false;
         String what = answer.getHead().getWhat();
         if(what.equals("poll-accepted")){
@@ -149,30 +105,6 @@ public class ApiQuery {
         }
         return false;
     }
-    public Boolean Poll1(String objectId, String cmd, String components){
-        Poll poll = new Poll();
-        poll.setPoll1(new String[]{objectId}, cmd, components);
-        String json = gson.toJson(Message("poll", poll));
-        Call<Message> call = NetworkService.Instance().getMxApi().message(json);
-        try {
-            Response<Message> response = call.execute();
-            if(!response.isSuccessful()){
-                return false;
-            }
-            String what = response.body().getHead().getWhat();
-            if(what.equals("poll-accepted")){
-                try {
-                    Thread.sleep(1000 * 3);
-                    return true;
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 
     public String isGetSession(Context context) {
         String login = "", password = "";
@@ -180,14 +112,12 @@ public class ApiQuery {
             login = Util.getProperty("login", context);
             password = Util.getProperty("password", context);
             gSessionId = Util.getProperty("sessionId", context);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException exc) {
+            Util.logsError(exc.getMessage(), context);
         }
-        if(gSessionId == null || gSessionId.equals("")) return AuthByLogin(context,login,password);
-        if(AuthBySession(context)){
-            return gSessionId;
-        }
-        return AuthByLogin(context,login,password);
+        if(gSessionId == null || gSessionId.equals("")) return AuthByLogin(context, login, password);
+        if(AuthBySession(context)) return gSessionId;
+        return AuthByLogin(context, login, password);
     }
 
     public boolean AuthBySession(Context context)
@@ -195,58 +125,38 @@ public class ApiQuery {
         if (gSessionId == null || gSessionId.equals("")) return false;
         AuthBySession authBySession = new AuthBySession();
         authBySession.setSessionId(gSessionId);
-
-        String tmp = gson.toJson(Message("auth-by-session", authBySession));
-        Call<Message> call = NetworkService.Instance().getMxApi().message(tmp);
         try {
-            Response<Message> response = call.execute();
-            if(!response.isSuccessful()){
-                return false;
-            }
-            if (response.body().getHead().getWhat().equals("auth-success"))
-            {
-
-                String json1 = gson.toJson(response.body().getBody());
-                AuthBySession authBySession1 = gson.fromJson(json1, AuthBySession.class) ;
-                gSessionId = authBySession1.getSessionId();
-                try {
-                    Util.setPropertyConfig("sessionId", gSessionId, context);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return true;
-            }
-        } catch (IOException e) {
-            Util.logsError(e.getMessage(), context);
+            Message message = MessageExecute("auth-by-session", authBySession, context);
+            if(message == null) return false;
+            if (!message.getHead().getWhat().equals("auth-success")) return false;
+            String json = gson.toJson(message.getBody());
+            AuthBySession authBySession1 = gson.fromJson(json, AuthBySession.class) ;
+            gSessionId = authBySession1.getSessionId();
+            Util.setPropertyConfig("sessionId", gSessionId, context);
+            return true;
+        } catch (Exception exc) {
+            Util.logsError(exc.getMessage(), context);
         }
         return false;
     }
 
-    public RecordsFromQueryDB[] QueryFromDatabase(){
+    public RecordsFromQueryDB[] QueryFromDatabase(Context context){
         Calendar calStart = Calendar.getInstance();
         calStart.add(Calendar.MINUTE,-25);
         Date dtStart = calStart.getTime();
         Calendar calendarNow = Calendar.getInstance();
         calendarNow.add(Calendar.MINUTE, 20);
         Date dtNow = calendarNow.getTime();
-
         QueryDB queryDB = new QueryDB();
         queryDB.setQueryDB(new String[]{Const.objectIdUpp}, dtStart, dtNow,"Current");
-
-
-        String json = gson.toJson(Message("records-get1", queryDB));
-        Call<Message> call = NetworkService.Instance().getMxApi().message(json);
         try {
-            Response<Message> response = call.execute();
-            if(!response.isSuccessful()){
-                return null;
-            }
-
-            String json1 = gson.toJson(response.body().getBody());
+            Message message = MessageExecute("records-get1", queryDB, context);
+            if(message == null) return null;
+            String json1 = gson.toJson(message.getBody());
             QueryDB queryDB1 = gson.fromJson(json1, QueryDB.class) ;
             return queryDB1.getRecords();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception exc) {
+            Util.logsError(exc.getMessage(), context);
         }
         return null;
     }

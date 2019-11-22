@@ -29,14 +29,11 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.concurrent.Executor;
 import java.nio.ByteBuffer;
-//import microsoft.aspnet.signalr.client.Platform;
-//import microsoft.aspnet.signalr.client.http.android.AndroidPlatformComponent;
 
 
 public class MainActivity extends AppCompatActivity {
-    public TextView tvMotor, tvUPPMain, tvUPPSecondary, tvHeightWaters, tvLastStartTime, tvLastStopTime, tvLastUpdate, tvUpp, tvTimeDataWls,tvMonitoringWls;
+    TextView tvMotor, tvUPPMain, tvUPPSecondary, tvHeightWaters, tvLastStartTime, tvLastStopTime, tvLastUpdate, tvUpp, tvTimeDataWls,tvMonitoringWls;
     public Gson gson = new Gson();
-    public String gSessionId = "";
 
     Handler handler = new Handler();
     public  MyService myService;
@@ -69,15 +66,13 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(intentSignin, Const.Session);
         }
         else{
-            mainFunction();
+            FunctionAtStart();
         }
     }
-    private void mainFunction(){
+    private void FunctionAtStart(){
         myService = new MyService();
-        Intent intent1 = new Intent();
-        PendingIntent pendingIntent = createPendingResult(1, intent1,0  );
+        PendingIntent pendingIntent = createPendingResult(1, new Intent(),0  );
         Intent intent = new Intent(this, MyService.class).putExtra("pendingIntent", pendingIntent);
-
         stopService(intent);
         myService.IsActivity(true);
         startService(intent);
@@ -127,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if(ApiQuery.Instance().Poll(Const.objectIdUpp,"","Current")){
+                if(ApiQuery.Instance().Poll(Const.objectIdUpp,"","Current", MainActivity.this)){
                     MainFunction();
                 }
             }
@@ -139,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if(resultCode == Const.Session){
-            mainFunction();
+            FunctionAtStart();
         }
         if(resultCode == Const.ClosedService){
 
@@ -161,22 +156,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public Socket socket;
-
-    // message to send to the server
-    private String mServerMessage;
-    // sends message received notifications
-    private TcpClient.OnMessageReceived mMessageListener = null;
     // while this is true, the server will continue running
     // used to send messages
     private DataOutputStream mBufferOut;
     // used to read messages from the server
-    private BufferedReader mBufferIn;
+    public BufferedReader mBufferIn;
     // sends message received notifications
 
     Executor es;
-    //DataOutputStream out;
-    private boolean mRun = false;
-    TcpClient mTcpClient;
     public void sendMessage() {
         Runnable runnable = new Runnable() {
             @Override
@@ -216,73 +203,61 @@ public class MainActivity extends AppCompatActivity {
         Thread thread = new Thread(runnable);
         thread.start();
     }
-    public interface OnMessageReceived {
-        public void messageReceived(String message);
-    }
-    int receiveLen;
-    char[] buf = new char[20];
-    byte[] buffer = new byte[20];
-    String err;
     public void TcpIpWls(){
-        try
-        {
-            try {
-                socket = new Socket(InetAddress.getByName(Const.IpAddressWls), Const.wlsPort);
-                mBufferOut = new DataOutputStream(socket.getOutputStream());
+        int receiveLen;
+        byte[] buffer = new byte[20];
+        try {
+            socket = new Socket(InetAddress.getByName(Const.IpAddressWls), Const.wlsPort);
+            mBufferOut = new DataOutputStream(socket.getOutputStream());
 
-                //receives the message which the server sends back
-                DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-                mBufferIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                float height = 0, pressure;
+            DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+            mBufferIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            float height = 0, pressure;
 
-                int wls;
-                NumberFormat formatDouble = new DecimalFormat("#00.00");
-                String strTmp = "";
+            int wls;
+            NumberFormat formatDouble = new DecimalFormat("#00.00");
+            String strTmp = "";
 
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
-                while (true){
-
-                    try{
-                        receiveLen = dataInputStream.read(buffer);
-                        if (receiveLen > 5 && buffer[0] == 0x10 && buffer[1] == 0x04) {
-                            if(buffer[2] == 0x04){
-                                Date dtNow = new Date();
-                                pressure = ByteBuffer.wrap(new byte[]{buffer[5],buffer[6],buffer[3],buffer[4]}).getFloat();
-                                height = pressure;
-                                strTmp = simpleDateFormat.format(dtNow) + "->" + formatDouble.format(height) + "("+ formatDouble.format(pressure) +")";
-                            }
-                            if(buffer[2] == 0x02){
-                                wls = (int)buffer[4];
-                                strTmp += ":"+  Integer.toBinaryString(wls);
-                            }
-                            final String tmp1 = strTmp;
-                            handler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    tvMonitoringWls.setText(tmp1);
-                                }
-                            });
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+            while (true){
+                try{
+                    receiveLen = dataInputStream.read(buffer);
+                    if (receiveLen > 5 && buffer[0] == 0x10 && buffer[1] == 0x04) {
+                        if(buffer[2] == 0x04){
+                            Date dtNow = new Date();
+                            pressure = ByteBuffer.wrap(new byte[]{buffer[5],buffer[6],buffer[3],buffer[4]}).getFloat();
+                            height = pressure;
+                            strTmp = simpleDateFormat.format(dtNow) + "->" + formatDouble.format(height) + "("+ formatDouble.format(pressure) +")";
                         }
-                    }
-                    catch (Exception eee){
-
+                        if(buffer[2] == 0x02){
+                            wls = (int)buffer[4];
+                            strTmp += ":" + Integer.toBinaryString(wls);
+                        }
+                        final String tmp1 = strTmp;
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                tvMonitoringWls.setText(tmp1);
+                            }
+                        });
                     }
                 }
-
-            } catch (Exception e) {
-                err = e.getMessage();
-                e.fillInStackTrace();
-            } finally {
-                socket.close();
+                catch (Exception exc){}
             }
-        }
-        catch(Exception ex){
+
+        } catch (Exception exc) {
+            Util.logsError(exc.getMessage(),this);
+        } finally {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                Util.logsError(e.getMessage(),this);
+            }
         }
     }
 
     public void MainFunction(){
-        RecordsFromQueryDB[] records = ApiQuery.Instance().QueryFromDatabase();
-        RecordsFromQueryDB recordsUpp, recordsWls, recordsHeight, recordsCurrentPhaseMax, recordsLastStartTime, recordsLastStopTime, recordsMotorCurrent;
+        RecordsFromQueryDB[] records = ApiQuery.Instance().QueryFromDatabase(this);
         if(records == null || records.length == 0){
             handler.post(new Runnable() {
                 @Override
@@ -292,13 +267,13 @@ public class MainActivity extends AppCompatActivity {
             });
             return;
         }
-        recordsUpp = Helper.GetLastRecordByType(records,"upp");
-        recordsWls = Helper.GetLastRecordByType(records, "wls");
-        recordsCurrentPhaseMax = Helper.GetLastRecordByType(records, "currentPhaseMax");
-        recordsHeight = Helper.GetLastRecordByType(records, "высота");
-        recordsLastStartTime = Helper.GetLastRecordByType(records, "lastStartTime");
-        recordsLastStopTime = Helper.GetLastRecordByType(records, "lastStopTime");
-        recordsMotorCurrent = Helper.GetLastRecordByType(records, "motorCurrent");
+        RecordsFromQueryDB recordsUpp = Helper.GetLastRecordByType(records,"upp");
+        RecordsFromQueryDB recordsWls = Helper.GetLastRecordByType(records, "wls");
+        RecordsFromQueryDB recordsCurrentPhaseMax = Helper.GetLastRecordByType(records, "currentPhaseMax");
+        RecordsFromQueryDB recordsHeight = Helper.GetLastRecordByType(records, "высота");
+        RecordsFromQueryDB recordsLastStartTime = Helper.GetLastRecordByType(records, "lastStartTime");
+        RecordsFromQueryDB recordsLastStopTime = Helper.GetLastRecordByType(records, "lastStopTime");
+        RecordsFromQueryDB recordsMotorCurrent = Helper.GetLastRecordByType(records, "motorCurrent");
 
         if(recordsUpp == null || recordsWls == null || recordsHeight == null){
             handler.post(new Runnable() {
@@ -310,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        String strMotor = "насос\n", strUppSecondary = "", strHeight = "\n\n";
+        String strMotor = "насос\n", strUppSecondary = "";
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         final String strLastUpdate = "время обновления: " + simpleDateFormat.format(recordsUpp.getDateDt());
@@ -353,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
 
         double height = recordsHeight.getD1d();
 
-        strHeight += "Высота,м: " + formatDouble.format(height)+"\n";
+        String strHeight = "Высота,м: " + formatDouble.format(height)+"\n";
 
         double percent = height*100/14;
         strHeight += "Заполн,%: " + formatDouble.format(percent)+"\n";

@@ -6,6 +6,8 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -28,6 +30,7 @@ public class SigninActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.etPassword);
         tvMessageSignin = findViewById(R.id.tvMessageSignin);
     }
+
     public void onClickEntry(View view){
         new Thread(new Runnable() {
             @Override
@@ -69,7 +72,7 @@ public class SigninActivity extends AppCompatActivity {
                         }
                         Intent answerIntent = new Intent();
                         answerIntent.putExtra("isLoginAndPassword", true);
-                        setResult(Const.Session,answerIntent);
+                        setResult(Const.Session, answerIntent);
                         finish();
                     }
                 }
