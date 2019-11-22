@@ -10,11 +10,8 @@ import android.widget.Switch;
 import java.io.IOException;
 
 public class CustomizableOptionsActivity extends AppCompatActivity {
-
-    public EditText etWLSmin2, etWLSmax2, etProc1, etMaxTimeStop, etProc2;
-    public Switch switchAutoQueryByDiscrepancy;
-    String WLSmin2, WLSmax2, Proc1, maxTimeStop,Proc2;
-    public boolean dd;
+    private EditText etWLSmin2, etWLSmax2, etProc1, etMaxTimeStop, etProc2;
+    private Switch switchAutoQueryByDiscrepancy;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,8 +41,6 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         finish();
         return true;
     }
-    boolean dd1;
-    String ddtrgt;
     public void onClickSaveOptions(View view){
         try {
             Util.setPropertyConfig("AutoQueryByDiscrepancy", Boolean.toString(switchAutoQueryByDiscrepancy.isChecked()), this);
