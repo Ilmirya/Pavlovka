@@ -61,15 +61,15 @@
                         android:id="@+id/tvWls"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
-                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
                         android:drawableEnd="@color/colorPrimary"
                         android:textColor="#FFFFFF"
                         android:textSize="20sp"
                         android:layout_marginRight="10dp"
                         android:layout_marginLeft="50dp"
                         android:textStyle="bold"
-                        android:layout_weight="14"/>
-
+                        android:layout_weight="14"
+                        />
                     <ProgressBar
                         android:id="@+id/pbWatersLevel"
                         android:visibility="visible"
