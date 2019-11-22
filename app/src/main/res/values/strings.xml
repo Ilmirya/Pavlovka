@@ -8,6 +8,6 @@
     <string name="startUpp1">Start</string>
     <string name="startUpp2">Start</string>
     <string name="start_and_h_smaller"><![CDATA[START and h <]]></string>
-    <string name="stop_and_h_smaller"><![CDATA[STOP and h <]]></string>
+    <string name="stop_and_h_smaller"><![CDATA[STOP and h < (default)]]></string>
 
 </resources>
