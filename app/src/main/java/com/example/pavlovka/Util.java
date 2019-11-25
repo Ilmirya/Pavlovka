@@ -114,4 +114,25 @@ public class Util {
             e.printStackTrace();
         }
     }
+    public static void logsException(String value, Context context){
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
+        String key = simpleDateFormat.format(new Date());
+        Throwable t = new Throwable();
+        StackTraceElement trace[] = t.getStackTrace();
+
+        // Глубина стэка должна быть больше 1-го, поскольку интересующий
+        // нас элемент стэка находится под индексом 1 массива элементов
+        // Элемент с индексом 0 - это текущий метод, т.е. log
+        String tmp = "";
+        if (trace.length > 1)
+        {
+            StackTraceElement element = trace[1];
+            tmp = element.getClassName() + "." + element.getMethodName() + " [" + element.getLineNumber() + "] ";
+        }
+        try {
+            setProperty("E#" + key, tmp +  value, context, "logs");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

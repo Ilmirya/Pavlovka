@@ -1,4 +1,4 @@
-package com.example.pavlovka.POJO;
+package com.example.pavlovka.Classes;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

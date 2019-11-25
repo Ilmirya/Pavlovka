@@ -5,7 +5,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
-import com.example.pavlovka.POJO.QueryFromDatabase.RecordsFromQueryDB;
+import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;

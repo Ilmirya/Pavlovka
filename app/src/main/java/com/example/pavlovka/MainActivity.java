@@ -12,7 +12,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import android.view.Menu;
-import com.example.pavlovka.POJO.QueryFromDatabase.RecordsFromQueryDB;
+import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
 import com.google.gson.Gson;
 
 import java.io.DataInputStream;
@@ -247,12 +247,12 @@ public class MainActivity extends AppCompatActivity {
             }
 
         } catch (Exception exc) {
-            Util.logsError(exc.getMessage(),this);
+            Util.logsException(exc.getMessage(),this);
         } finally {
             try {
                 socket.close();
             } catch (IOException e) {
-                Util.logsError(e.getMessage(),this);
+                Util.logsException(e.getMessage(),this);
             }
         }
     }
@@ -300,10 +300,10 @@ public class MainActivity extends AppCompatActivity {
             String[] arrTmp = uppTmp.split("=");
             if (arrTmp[0].equals("мотор")) {
                 if(arrTmp[1].equals("START")){
-                    strMotor += "ЗАПУЩЕН";
+                    strMotor += "СТАРТ";//"ЗАПУЩЕН";
                 }
                 else {
-                    strMotor += "ОСТ-ЛЕН";
+                    strMotor += "СТОП";// "ОСТ-ЛЕН";
                 }
             }
             else if (arrTmp[0].equals("Auto mode")) {

@@ -1,4 +1,4 @@
-package com.example.pavlovka.POJO.BodyForSignalR;
+package com.example.pavlovka.Classes.BodyForSignalR;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

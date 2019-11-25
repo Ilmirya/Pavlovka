@@ -1,4 +1,4 @@
-package com.example.pavlovka.POJO.RowCache2And3;
+package com.example.pavlovka.Classes.RowCache2And3;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

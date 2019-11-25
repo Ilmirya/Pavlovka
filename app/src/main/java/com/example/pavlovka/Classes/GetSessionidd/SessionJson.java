@@ -1,4 +1,4 @@
-package com.example.pavlovka.POJO.GetSessionidd;
+package com.example.pavlovka.Classes.GetSessionidd;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

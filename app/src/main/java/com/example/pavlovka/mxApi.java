@@ -1,7 +1,7 @@
 package com.example.pavlovka;
 
-import com.example.pavlovka.POJO.GetSessionidd.SessionJson;
-import com.example.pavlovka.POJO.Message;
+import com.example.pavlovka.Classes.GetSessionidd.SessionJson;
+import com.example.pavlovka.Classes.Message;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
