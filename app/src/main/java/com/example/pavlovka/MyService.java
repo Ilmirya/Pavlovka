@@ -412,7 +412,7 @@ public class MyService extends Service {
                         strMotor += "ЗАПУЩЕН";
                     }
                     else {
-                        strMotor += "ОСТАНОВЛЕН";
+                        strMotor += "ОСТ-ЛЕН";
                     }
                     break;
                 case "Auto mode":

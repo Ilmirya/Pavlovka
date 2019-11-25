@@ -30,7 +30,27 @@ public class SigninActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.etPassword);
         tvMessageSignin = findViewById(R.id.tvMessageSignin);
     }
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.CustomizableOptionsActivity:
+                Intent intent = new Intent(this, CustomizableOptionsActivity.class);
+                startActivity(intent);
+                return true;
+            case R.id.LogsActivity:
+                Intent intent1 = new Intent(this, LogsActivity.class);
+                startActivity(intent1);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
     public void onClickEntry(View view){
         new Thread(new Runnable() {
             @Override

@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         tvTimeDataWls = findViewById(R.id.tvTimeDataWls);
         tvMonitoringWls = findViewById(R.id.tvMonitoringWls);
         String login = "", password = "";
+
         try {
             login = Util.getProperty("login", this);
             password = Util.getProperty("password", this);
@@ -302,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
                     strMotor += "ЗАПУЩЕН";
                 }
                 else {
-                    strMotor += "ОСТАНОВЛЕН";
+                    strMotor += "ОСТ-ЛЕН";
                 }
             }
             else if (arrTmp[0].equals("Auto mode")) {
