@@ -2,15 +2,15 @@ package com.example.pavlovka;
 
 import android.content.Context;
 
-import com.example.pavlovka.POJO.Auth.AuthBySession.AuthBySession;
-import com.example.pavlovka.POJO.GetSessionidd.BodyFromSession;
-import com.example.pavlovka.POJO.GetSessionidd.SessionJson;
-import com.example.pavlovka.POJO.GetSessionidd.UserFromBodySession;
-import com.example.pavlovka.POJO.Message;
-import com.example.pavlovka.POJO.Poll;
-import com.example.pavlovka.POJO.QueryFromDatabase.QueryDB;
-import com.example.pavlovka.POJO.QueryFromDatabase.RecordsFromQueryDB;
-import com.example.pavlovka.POJO.SignalBind;
+import com.example.pavlovka.Classes.Auth.AuthBySession.AuthBySession;
+import com.example.pavlovka.Classes.GetSessionidd.BodyFromSession;
+import com.example.pavlovka.Classes.GetSessionidd.SessionJson;
+import com.example.pavlovka.Classes.GetSessionidd.UserFromBodySession;
+import com.example.pavlovka.Classes.Message;
+import com.example.pavlovka.Classes.Poll;
+import com.example.pavlovka.Classes.QueryFromDatabase.QueryDB;
+import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
+import com.example.pavlovka.Classes.SignalBind;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -45,6 +45,7 @@ public class ApiQuery {
                 return "";
             }
             BodyFromSession post = response.body().getBody();
+            if(post == null) return "";
             UserFromBodySession userFromBodySession = post.getUser();
             if(userFromBodySession != null){
                 String strIsAdmin = userFromBodySession.getIsAdmin();
@@ -60,7 +61,7 @@ public class ApiQuery {
             Util.setPropertyConfig("isAdmin", Boolean.toString(isAdmin), context);
             return post.getSessionId();
         } catch (IOException e) {
-            Util.logsError(e.getMessage(),context);
+            Util.logsException(e.getMessage(),context);
         }
        return "";
     }
@@ -77,7 +78,7 @@ public class ApiQuery {
             if(!response.isSuccessful()) return null;
             answerMessage = response.body();
         } catch (IOException e) {
-            Util.logsError(e.getMessage(),context);
+            Util.logsException(e.getMessage(),context);
         }
         return answerMessage;
     }
@@ -93,14 +94,14 @@ public class ApiQuery {
         Poll poll = new Poll();
         poll.setPoll1(new String[]{objectId}, cmd, components);
         Message answer = MessageExecute("poll", poll, context);
-        if(answer == null) return false;
+        if(answer == null || answer.getHead() == null) return false;
         String what = answer.getHead().getWhat();
         if(what.equals("poll-accepted")){
             try {
                 Thread.sleep(1000 * 3);
                 return true;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            } catch (InterruptedException exc) {
+                Util.logsException(exc.getMessage(), context);
             }
         }
         return false;
@@ -113,7 +114,7 @@ public class ApiQuery {
             password = Util.getProperty("password", context);
             gSessionId = Util.getProperty("sessionId", context);
         } catch (IOException exc) {
-            Util.logsError(exc.getMessage(), context);
+            Util.logsException(exc.getMessage(), context);
         }
         if(gSessionId == null || gSessionId.equals("")) return AuthByLogin(context, login, password);
         if(AuthBySession(context)) return gSessionId;
@@ -127,7 +128,7 @@ public class ApiQuery {
         authBySession.setSessionId(gSessionId);
         try {
             Message message = MessageExecute("auth-by-session", authBySession, context);
-            if(message == null) return false;
+            if(message == null || message.getHead() == null) return false;
             if (!message.getHead().getWhat().equals("auth-success")) return false;
             String json = gson.toJson(message.getBody());
             AuthBySession authBySession1 = gson.fromJson(json, AuthBySession.class) ;
@@ -135,7 +136,7 @@ public class ApiQuery {
             Util.setPropertyConfig("sessionId", gSessionId, context);
             return true;
         } catch (Exception exc) {
-            Util.logsError(exc.getMessage(), context);
+            Util.logsException(exc.getMessage(), context);
         }
         return false;
     }
@@ -151,12 +152,12 @@ public class ApiQuery {
         queryDB.setQueryDB(new String[]{Const.objectIdUpp}, dtStart, dtNow,"Current");
         try {
             Message message = MessageExecute("records-get1", queryDB, context);
-            if(message == null) return null;
+            if(message == null || message.getBody() == null) return null;
             String json1 = gson.toJson(message.getBody());
             QueryDB queryDB1 = gson.fromJson(json1, QueryDB.class) ;
             return queryDB1.getRecords();
         } catch (Exception exc) {
-            Util.logsError(exc.getMessage(), context);
+            Util.logsException(exc.getMessage(), context);
         }
         return null;
     }

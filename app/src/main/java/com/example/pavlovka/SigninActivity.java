@@ -32,18 +32,14 @@ public class SigninActivity extends AppCompatActivity {
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.logs, menu);
         return true;
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case R.id.CustomizableOptionsActivity:
-                Intent intent = new Intent(this, CustomizableOptionsActivity.class);
-                startActivity(intent);
-                return true;
-            case R.id.LogsActivity:
+            case R.id.LogsActivityMenu:
                 Intent intent1 = new Intent(this, LogsActivity.class);
                 startActivity(intent1);
                 return true;

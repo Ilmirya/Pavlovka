@@ -6,17 +6,19 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.TaskStackBuilder;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.pavlovka.POJO.BodyForSignalR.ListUpdateBody;
-import com.example.pavlovka.POJO.Message;
-import com.example.pavlovka.POJO.QueryFromDatabase.RecordsFromQueryDB;
+import com.example.pavlovka.Classes.BodyForSignalR.ListUpdateBody;
+import com.example.pavlovka.Classes.Message;
+import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
@@ -84,9 +86,18 @@ public class MyService extends Service {
     }
     private void startForeground() {
         Intent notificationIntent = new Intent(this, MainActivity.class);
-
+        String CHANNEL_ID = "channel_00";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "channel";
+            String Description = "This is my channel";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
+            mChannel.setDescription(Description);
+            mChannel.setShowBadge(false);
+            notificationManager.createNotificationChannel(mChannel);
+        }
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        Notification notification = new NotificationCompat.Builder(this, "ChannelId") // don't forget create a notification channel first
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID) // don't forget create a notification channel first
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setOngoing(true)
                 .setContentTitle(getString(R.string.app_name))
@@ -233,7 +244,7 @@ public class MyService extends Service {
             TryToConnect();
         }
         catch (Exception ex){
-            Util.logsError(ex.getMessage(),this);
+            Util.logsException(ex.getMessage(),this);
         }
     }
     public void ReceivedSignalR(JsonElement e)
@@ -279,7 +290,7 @@ public class MyService extends Service {
             }
         }
         catch (Exception ex){
-            Util.logsError(ex.getMessage(),this);
+            Util.logsException(ex.getMessage(),this);
         }
     }
     public void MainFunction(){
@@ -406,31 +417,31 @@ public class MyService extends Service {
         for(String uppTmp : arrUpp){
             String[] arrTmp = uppTmp.split("=");
             switch (arrTmp[0]){
-            case "мотор":
-                if(arrTmp[1].equals("START")){
-                    strMotor += "ЗАПУЩЕН";
-                }
-                else {
-                    strMotor += "ОСТ-ЛЕН";
-                }
-                break;
-            case "Auto mode":
-                strUppSecondary += "Auto mode: " + arrTmp[1] + "\n";
-                break;
-            case "Fault":
-                strUppSecondary += "Fault: " + arrTmp[1] + "\n";
-                break;
-            case "TOR":
-                strUppSecondary += "TOR: " + arrTmp[1] + "\n";
-                break;
-            case "ReadySS":
-                strUppSecondary += "ReadySS: " + arrTmp[1] + "\n";
-                break;
-            case "DI":
-                strUppSecondary += "DI: " + arrTmp[1] + "\n";
-                break;
+                case "мотор":
+                    if(arrTmp[1].equals("START")){
+                        strMotor += "СТАРТ";//"ЗАПУЩЕН";
+                    }
+                    else {
+                        strMotor += "СТОП";// "ОСТ-ЛЕН";
+                    }
+                    break;
+                case "Auto mode":
+                    strUppSecondary += "Auto mode: " + arrTmp[1] + "\n";
+                    break;
+                case "Fault":
+                    strUppSecondary += "Fault: " + arrTmp[1] + "\n";
+                    break;
+                case "TOR":
+                    strUppSecondary += "TOR: " + arrTmp[1] + "\n";
+                    break;
+                case "ReadySS":
+                    strUppSecondary += "ReadySS: " + arrTmp[1] + "\n";
+                    break;
+                case "DI":
+                    strUppSecondary += "DI: " + arrTmp[1] + "\n";
+                    break;
+            }
         }
-    }
 
         String strUppMain = recordCurrentPhaseMax != null ? ("Макс.ток фаз,A:\n" + recordCurrentPhaseMax.getD1s() + "\n") : "undefined\n";
         strUppMain += recordMotorCurrent != null ? ("% от номинала:\n" + recordMotorCurrent.getD1s()) : "undefined";
@@ -455,7 +466,7 @@ public class MyService extends Service {
         try {
             pendingIntent.send(MyService.this, Const.Success, intent);
         } catch (PendingIntent.CanceledException e) {
-            e.printStackTrace();
+            Util.logsException(e.getMessage(),this);
         }
     }
 
@@ -472,7 +483,6 @@ public class MyService extends Service {
             WLSmax2 = Double.parseDouble(Util.getPropertyOrSetDefaultValue("WLSmax2", "13.75",this));
 
             isDataNull = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isDataNull", "false",this));
-            isNotConnection = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isNotConnection", "false",this));
 
             isWlsLessThenWlsminAndStop = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWlsminAndStop", "false",this));
             isWlsMoreThenWlsmaxAndStart=Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsMoreThenWlsmaxAndStart", "false",this));
@@ -481,7 +491,7 @@ public class MyService extends Service {
             isProc1 = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isProc1", "false",this));
         }
         catch (Exception ex){
-            ex.fillInStackTrace();
+            Util.logsException(ex.getMessage(),this);
         }
         RecordsFromQueryDB[] records = ApiQuery.Instance().QueryFromDatabase(this);
         if(records == null || records.length == 0){

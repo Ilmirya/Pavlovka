@@ -1,27 +1,30 @@
-package com.example.pavlovka.POJO;
+package com.example.pavlovka.Classes.GetSessionidd;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class GetSessionId {
+public class BodyFromSession {
 
     @SerializedName("login")
     @Expose
-    public String login;
+    private String login;
 
     @SerializedName("password")
     @Expose
     public String password;
 
-    public void setLoginPassword(String login, String password) {
+    public void setLogin(String login) {
         this.login = login;
+    }
+
+    public void setPassword(String password) {
         this.password = password;
     }
-    //-------get
+
 
     @SerializedName("user")
     @Expose
-    public Object user;
+    public UserFromBodySession user;
 
     @SerializedName("sessionId")
     @Expose
@@ -32,7 +35,7 @@ public class GetSessionId {
     public String message;
 
 
-    public Object getUser() {
+    public UserFromBodySession getUser() {
         return user;
     }
 

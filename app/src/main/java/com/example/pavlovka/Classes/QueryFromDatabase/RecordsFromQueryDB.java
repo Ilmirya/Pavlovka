@@ -1,4 +1,4 @@
-package com.example.pavlovka.POJO.QueryFromDatabase;
+package com.example.pavlovka.Classes.QueryFromDatabase;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -34,9 +34,6 @@ public class RecordsFromQueryDB {
     @Expose
     public String dt1;
 
-    public String getObjectId() {
-        return objectId;
-    }
 
     public Date getDateDt() {
         Date date1 = new Date();

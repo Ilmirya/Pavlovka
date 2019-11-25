@@ -1,6 +1,5 @@
-package com.example.pavlovka.POJO.Auth.AuthBySession;
+package com.example.pavlovka.Classes.Auth.AuthBySession;
 
-import com.example.pavlovka.POJO.HeadApi;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
