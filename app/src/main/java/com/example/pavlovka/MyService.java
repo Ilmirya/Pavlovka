@@ -93,7 +93,6 @@ public class MyService extends Service {
                 .setContentText("Service is running background")
                 .setContentIntent(pendingIntent)
                 .build();
-
         startForeground(1, notification);
     }
     class MyRun implements Runnable {
@@ -407,31 +406,31 @@ public class MyService extends Service {
         for(String uppTmp : arrUpp){
             String[] arrTmp = uppTmp.split("=");
             switch (arrTmp[0]){
-                case "мотор":
-                    if(arrTmp[1].equals("START")){
-                        strMotor += "ЗАПУЩЕН";
-                    }
-                    else {
-                        strMotor += "ОСТ-ЛЕН";
-                    }
-                    break;
-                case "Auto mode":
-                    strUppSecondary += "Auto mode: " + arrTmp[1] + "\n";
-                    break;
-                case "Fault":
-                    strUppSecondary += "Fault: " + arrTmp[1] + "\n";
-                    break;
-                case "TOR":
-                    strUppSecondary += "TOR: " + arrTmp[1] + "\n";
-                    break;
-                case "ReadySS":
-                    strUppSecondary += "ReadySS: " + arrTmp[1] + "\n";
-                    break;
-                case "DI":
-                    strUppSecondary += "DI: " + arrTmp[1] + "\n";
-                    break;
-            }
+            case "мотор":
+                if(arrTmp[1].equals("START")){
+                    strMotor += "ЗАПУЩЕН";
+                }
+                else {
+                    strMotor += "ОСТ-ЛЕН";
+                }
+                break;
+            case "Auto mode":
+                strUppSecondary += "Auto mode: " + arrTmp[1] + "\n";
+                break;
+            case "Fault":
+                strUppSecondary += "Fault: " + arrTmp[1] + "\n";
+                break;
+            case "TOR":
+                strUppSecondary += "TOR: " + arrTmp[1] + "\n";
+                break;
+            case "ReadySS":
+                strUppSecondary += "ReadySS: " + arrTmp[1] + "\n";
+                break;
+            case "DI":
+                strUppSecondary += "DI: " + arrTmp[1] + "\n";
+                break;
         }
+    }
 
         String strUppMain = recordCurrentPhaseMax != null ? ("Макс.ток фаз,A:\n" + recordCurrentPhaseMax.getD1s() + "\n") : "undefined\n";
         strUppMain += recordMotorCurrent != null ? ("% от номинала:\n" + recordMotorCurrent.getD1s()) : "undefined";

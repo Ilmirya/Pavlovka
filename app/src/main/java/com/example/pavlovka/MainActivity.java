@@ -56,18 +56,18 @@ public class MainActivity extends AppCompatActivity {
         tvMonitoringWls = findViewById(R.id.tvMonitoringWls);
         String login = "", password = "";
 
-        try {
+       try {
             login = Util.getProperty("login", this);
             password = Util.getProperty("password", this);
         } catch (IOException e) {
             e.printStackTrace();
         }
         if(login == null || password == null || login.equals("") || password.equals("")){
-            Intent intentSignin = new Intent(this, SigninActivity.class);
+           Intent intentSignin = new Intent(this, SigninActivity.class);
             startActivityForResult(intentSignin, Const.Session);
         }
         else{
-            FunctionAtStart();
+           FunctionAtStart();
         }
     }
     private void FunctionAtStart(){
@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if(resultCode == Const.Session){
-            FunctionAtStart();
+           FunctionAtStart();
         }
         if(resultCode == Const.ClosedService){
 
