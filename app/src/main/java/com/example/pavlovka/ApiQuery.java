@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.lang.String;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -31,6 +32,7 @@ public class ApiQuery {
     public Gson gson = new Gson();
     public String gSessionId = "";
 
+    ArrayList<String> logsList = new ArrayList<>();
     boolean isAdmin = false;
     public String AuthByLogin(Context context, String login, String password){
         SessionJson sessionJson = new SessionJson();
@@ -61,11 +63,24 @@ public class ApiQuery {
             Util.setPropertyConfig("isAdmin", Boolean.toString(isAdmin), context);
             return post.getSessionId();
         } catch (IOException e) {
-            Util.logsException(e.getMessage(),context);
+            if(logsReplay(e.getMessage())){
+                Util.logsException(e.getMessage(),context);
+            }
         }
        return "";
     }
-
+    public boolean logsReplay(String value){
+        for(int i = 0; i < logsList.size(); i++){
+            if(logsList.get(i).equals(value)){
+                return false;
+            }
+        }
+        if(logsList.size() > 4){
+            logsList.remove(0);
+        }
+        logsList.add(value);
+        return true;
+    }
     public Message MessageExecute (String what, Object body, Context context){
         Message message = new Message();
         message.setHead(what, gSessionId);
@@ -78,7 +93,9 @@ public class ApiQuery {
             if(!response.isSuccessful()) return null;
             answerMessage = response.body();
         } catch (IOException e) {
-            Util.logsException(e.getMessage(),context);
+            if(logsReplay(e.getMessage())){
+                Util.logsException(e.getMessage(),context);
+            }
         }
         return answerMessage;
     }
@@ -101,7 +118,9 @@ public class ApiQuery {
                 Thread.sleep(1000 * 3);
                 return true;
             } catch (InterruptedException exc) {
-                Util.logsException(exc.getMessage(), context);
+                if(logsReplay(exc.getMessage())){
+                    Util.logsException(exc.getMessage(),context);
+                }
             }
         }
         return false;
@@ -135,8 +154,10 @@ public class ApiQuery {
             gSessionId = authBySession1.getSessionId();
             Util.setPropertyConfig("sessionId", gSessionId, context);
             return true;
-        } catch (Exception exc) {
-            Util.logsException(exc.getMessage(), context);
+        } catch (Exception e) {
+            if(logsReplay(e.getMessage())){
+                Util.logsException(e.getMessage(),context);
+            }
         }
         return false;
     }
@@ -156,8 +177,10 @@ public class ApiQuery {
             String json1 = gson.toJson(message.getBody());
             QueryDB queryDB1 = gson.fromJson(json1, QueryDB.class) ;
             return queryDB1.getRecords();
-        } catch (Exception exc) {
-            Util.logsException(exc.getMessage(), context);
+        } catch (Exception e) {
+            if(logsReplay(e.getMessage())){
+                Util.logsException(e.getMessage(),context);
+            }
         }
         return null;
     }

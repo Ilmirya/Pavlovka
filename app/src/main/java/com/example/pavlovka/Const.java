@@ -18,7 +18,8 @@ public class Const {
     public final static Integer ActivCreate = 2;
 
     public final static String ifDataNull = "НЕТ ДАННЫХ, ОБНОВИТЕ";
-    public final static String notConnection = "Нет соединения с сервером";
+    public final static String notConnectionToServer = "Нет соединения с сервером";
+    public final static String notConnectionToInternet = "Нет подключения к интернету";
 
     public final static Integer notifNotConnecion = 0;
     public final static Integer notifDataNull = 1;

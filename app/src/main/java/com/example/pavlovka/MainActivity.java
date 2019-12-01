@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
@@ -56,18 +58,23 @@ public class MainActivity extends AppCompatActivity {
         tvMonitoringWls = findViewById(R.id.tvMonitoringWls);
         String login = "", password = "";
 
-       try {
+        if(!Util.isConnectionInternet(this)){
+            Util.logsError(Const.notConnectionToInternet,this);
+            tvHeightWaters.setText(Const.notConnectionToInternet);
+            return;
+        }
+        try {
             login = Util.getProperty("login", this);
             password = Util.getProperty("password", this);
         } catch (IOException e) {
             e.printStackTrace();
         }
         if(login == null || password == null || login.equals("") || password.equals("")){
-           Intent intentSignin = new Intent(this, SigninActivity.class);
+            Intent intentSignin = new Intent(this, SigninActivity.class);
             startActivityForResult(intentSignin, Const.Session);
         }
         else{
-           FunctionAtStart();
+            FunctionAtStart();
         }
     }
     private void FunctionAtStart(){
@@ -135,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if(resultCode == Const.Session){
-           FunctionAtStart();
+            FunctionAtStart();
         }
         if(resultCode == Const.ClosedService){
 
@@ -205,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
         thread.start();
     }
     public void TcpIpWls(){
+        if(!Util.isConnectionInternet(this)) return;
         int receiveLen;
         byte[] buffer = new byte[20];
         try {
@@ -213,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
 
             DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
             mBufferIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            float height = 0, pressure;
+            float height, pressure;
 
             int wls;
             NumberFormat formatDouble = new DecimalFormat("#00.00");
@@ -243,7 +251,9 @@ public class MainActivity extends AppCompatActivity {
                         });
                     }
                 }
-                catch (Exception exc){}
+                catch (Exception exc){
+
+                }
             }
 
         } catch (Exception exc) {
@@ -298,28 +308,30 @@ public class MainActivity extends AppCompatActivity {
         String[] arrUpp = recordsUpp.getS2().split("; ");
         for(String uppTmp : arrUpp){
             String[] arrTmp = uppTmp.split("=");
-            if (arrTmp[0].equals("мотор")) {
-                if(arrTmp[1].equals("START")){
-                    strMotor += "СТАРТ";//"ЗАПУЩЕН";
-                }
-                else {
-                    strMotor += "СТОП";// "ОСТ-ЛЕН";
-                }
-            }
-            else if (arrTmp[0].equals("Auto mode")) {
-                strUppSecondary += "Auto mode: " + arrTmp[1] + "\n";
-            }
-            else if (arrTmp[0].equals("Fault")) {
-                strUppSecondary += "Fault: " + arrTmp[1] + "\n";
-            }
-            else if (arrTmp[0].equals("TOR")) {
-                strUppSecondary += "TOR: " + arrTmp[1] + "\n";
-            }
-            else if (arrTmp[0].equals("ReadySS")) {
-                strUppSecondary += "ReadySS: " + arrTmp[1] + "\n";
-            }
-            else if (arrTmp[0].equals("DI")) {
-                strUppSecondary += "DI: " + arrTmp[1] + "\n";
+            switch (arrTmp[0]){
+                case "мотор":
+                    if(arrTmp[1].equals("START")){
+                        strMotor += "СТАРТ";//"ЗАПУЩЕН";
+                    }
+                    else {
+                        strMotor += "СТОП";// "ОСТ-ЛЕН";
+                    }
+                    break;
+                case "Auto mode":
+                    strUppSecondary += "Auto mode: " + arrTmp[1] + "\n";
+                    break;
+                case "Fault":
+                    strUppSecondary += "Fault: " + arrTmp[1] + "\n";
+                    break;
+                case "TOR":
+                    strUppSecondary += "TOR: " + arrTmp[1] + "\n";
+                    break;
+                case "ReadySS":
+                    strUppSecondary += "ReadySS: " + arrTmp[1] + "\n";
+                    break;
+                case "DI":
+                    strUppSecondary += "DI: " + arrTmp[1] + "\n";
+                    break;
             }
         }
         NumberFormat formatDouble = new DecimalFormat("#00.00");

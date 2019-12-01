@@ -6,7 +6,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.TaskStackBuilder;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.RingtoneManager;
@@ -70,6 +69,7 @@ public class MyService extends Service {
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         es = Executors.newFixedThreadPool(1);
     }
+
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
@@ -87,6 +87,7 @@ public class MyService extends Service {
     private void startForeground() {
         Intent notificationIntent = new Intent(this, MainActivity.class);
         String CHANNEL_ID = "channel_00";
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "channel";
             String Description = "This is my channel";
@@ -96,6 +97,7 @@ public class MyService extends Service {
             mChannel.setShowBadge(false);
             notificationManager.createNotificationChannel(mChannel);
         }
+
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID) // don't forget create a notification channel first
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -114,7 +116,7 @@ public class MyService extends Service {
                     gSessionId = ApiQuery.Instance().isGetSession(MyService.this);
                     if(gSessionId == null || gSessionId == ""){
                         if(gIsNotConnected){
-                            Intent intent = new Intent().putExtra("tvHeightWaters", Const.notConnection);
+                            Intent intent = new Intent().putExtra("tvHeightWaters", Const.notConnectionToServer);
                             try {
                                 pendingIntent.send(MyService.this,Const.Error,intent);
                             } catch (PendingIntent.CanceledException e) {
@@ -127,7 +129,7 @@ public class MyService extends Service {
                             catch (Exception ex){
                                 ex.fillInStackTrace();
                             }
-                            sendNotif(Const.notConnection, "", Const.notifNotConnecion, isNotConnection);
+                            sendNotif(Const.notConnectionToServer, "", Const.notifNotConnecion, isNotConnection);
                         }
                         gIsNotConnected = true;
                     }else{
@@ -194,7 +196,7 @@ public class MyService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Intent intent = new Intent().putExtra("tvHeightWaters", Const.notConnection);
+        Intent intent = new Intent().putExtra("tvHeightWaters", Const.notConnectionToServer);
         try {
             pendingIntent.send(MyService.this, Const.ClosedService, intent);
         } catch (PendingIntent.CanceledException e) {
@@ -419,10 +421,10 @@ public class MyService extends Service {
             switch (arrTmp[0]){
                 case "мотор":
                     if(arrTmp[1].equals("START")){
-                        strMotor += "СТАРТ";//"ЗАПУЩЕН";
+                        strMotor += "СТАРТ";
                     }
                     else {
-                        strMotor += "СТОП";// "ОСТ-ЛЕН";
+                        strMotor += "СТОП";
                     }
                     break;
                 case "Auto mode":

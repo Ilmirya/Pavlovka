@@ -1,6 +1,8 @@
 package com.example.pavlovka;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,16 +15,9 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-
-/**
- * Created by Nirmal Dhara on 12-07-2015.
- */
 public class Util {
     public static String getProperty(String key, Context context) throws IOException {
         return getProperties(context,"config").getProperty(key);
@@ -96,6 +91,7 @@ public class Util {
         FileOutputStream fileOutputStream = new FileOutputStream(context.getFilesDir()+"/config.properties");
         properties.store(fileOutputStream,null);
     }
+
     public static void logsInfo(String value, Context context){
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
         String key = simpleDateFormat.format(new Date());
@@ -115,11 +111,8 @@ public class Util {
         }
     }
     public static void logsException(String value, Context context){
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
-        String key = simpleDateFormat.format(new Date());
         Throwable t = new Throwable();
         StackTraceElement trace[] = t.getStackTrace();
-
         // Глубина стэка должна быть больше 1-го, поскольку интересующий
         // нас элемент стэка находится под индексом 1 массива элементов
         // Элемент с индексом 0 - это текущий метод, т.е. log
@@ -129,10 +122,26 @@ public class Util {
             StackTraceElement element = trace[1];
             tmp = element.getClassName() + "." + element.getMethodName() + " [" + element.getLineNumber() + "] ";
         }
-        try {
-            setProperty("E#" + key, tmp +  value, context, "logs");
-        } catch (IOException e) {
-            e.printStackTrace();
+        logsError(tmp + value,context);
+    }
+    public static boolean isConnectionInternet(final Context context)
+    {
+        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo wifiInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (wifiInfo != null && wifiInfo.isConnected())
+        {
+            return true;
         }
+        wifiInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        if (wifiInfo != null && wifiInfo.isConnected())
+        {
+            return true;
+        }
+        wifiInfo = cm.getActiveNetworkInfo();
+        if (wifiInfo != null && wifiInfo.isConnected())
+        {
+            return true;
+        }
+        return false;
     }
 }
