@@ -14,4 +14,11 @@
         navigationdrawer:showAsAction="never"
         android:title="Логи">
     </item>
+    <item
+        android:id="@+id/Exit"
+        android:icon="@android:drawable/ic_menu_info_details"
+        navigationdrawer:showAsAction="never"
+        android:title="Выйти из системы">
+    </item>
+
 </menu>

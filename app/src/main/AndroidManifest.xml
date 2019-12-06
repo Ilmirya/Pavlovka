@@ -16,9 +16,12 @@
         android:usesCleartextTraffic="true"
         android:testOnly="false"
         android:theme="@style/AppTheme">
-        <activity android:name=".SigninActivity"/>
+        <activity android:name=".SigninActivity"
+            android:windowSoftInputMode="stateHidden"/>
         <activity android:name=".LogsActivity" />
-        <activity android:name=".CustomizableOptionsActivity" />
+        <activity
+            android:name=".CustomizableOptionsActivity"
+            android:windowSoftInputMode="stateHidden"/>
 
         <service
             android:name=".MyService"
@@ -32,6 +35,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

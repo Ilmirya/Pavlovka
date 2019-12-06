@@ -63,7 +63,8 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         finish();
         return true;
     }
-    public void onClickSaveOptions(View view){
+    public void onDestroy(){
+        super.onDestroy();
         try {
             Util.setPropertyConfig("isWlsLessThenWlsminAndStop", Boolean.toString(swhWlsLessThenWlsminAndStop.isChecked()), this);
             Util.setPropertyConfig("isWlsMoreThenWlsmaxAndStart", Boolean.toString(swhWlsMoreThenWlsmaxAndStart.isChecked()), this);
@@ -85,4 +86,5 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
 }

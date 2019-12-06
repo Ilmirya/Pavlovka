@@ -108,6 +108,10 @@ public class MyService extends Service {
                 .build();
         startForeground(1, notification);
     }
+
+    public void stopService() {
+    }
+
     class MyRun implements Runnable {
         public void run() {
             timer.schedule(new TimerTask() {

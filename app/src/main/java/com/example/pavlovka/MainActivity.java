@@ -4,8 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
@@ -109,10 +107,18 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent1 = new Intent(this, LogsActivity.class);
                 startActivity(intent1);
                 return true;
+            case R.id.Exit:
+                finishAffinity();
+                Intent intente = new Intent(this, MyService.class);
+                myService.IsActivity(true);
+                stopService(intente);
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
+
+
+
     @Override
     protected void onStop() {
         super.onStop();

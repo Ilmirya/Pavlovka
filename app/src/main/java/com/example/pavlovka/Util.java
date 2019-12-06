@@ -3,11 +3,14 @@ package com.example.pavlovka;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.view.View;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -36,6 +39,14 @@ public class Util {
         properties.load(fileInputStream);
         return properties;
     }
+
+    public static void cleanProperties(Context context, String fileName) throws IOException{
+        FileWriter   fileInputStream = new FileWriter (context.getFilesDir()+"/"+ fileName + ".properties", false);
+        fileInputStream.write("");
+        fileInputStream.flush();
+        fileInputStream.close();
+    }
+
     public static void setProperty(String key, String value, Context context, String fileName) throws IOException {
         if(value == null) return;
         Properties properties = new Properties();
@@ -75,8 +86,8 @@ public class Util {
         }
         FileOutputStream fileOutputStream = new FileOutputStream(context.getFilesDir()+"/"+ fileName + ".properties");
         properties.store(fileOutputStream,null);
-
     }
+
     public static void setPropertyConfig(String key, String value, Context context) throws IOException {
         if(value == null) return;
         Properties properties = new Properties();
@@ -91,6 +102,7 @@ public class Util {
         FileOutputStream fileOutputStream = new FileOutputStream(context.getFilesDir()+"/config.properties");
         properties.store(fileOutputStream,null);
     }
+
 
     public static void logsInfo(String value, Context context){
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");

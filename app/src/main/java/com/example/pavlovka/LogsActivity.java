@@ -2,12 +2,12 @@ package com.example.pavlovka;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
+import android.view.View;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -17,7 +17,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Properties;
 
 public class LogsActivity extends AppCompatActivity {
@@ -27,6 +26,8 @@ public class LogsActivity extends AppCompatActivity {
     public String ss;
     public Enumeration<String> enumerationStr;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,9 +36,14 @@ public class LogsActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);   //show back button
         tvLogs = findViewById(R.id.tvLogs);
         ss = "";
+
         try {
             properties = Util.getProperties(this, "logs");
+
+
             enumerationStr = (Enumeration<String>) properties.propertyNames();
+
+
 
             ArrayList<String> listKeys = new ArrayList<>();
 
@@ -87,10 +93,19 @@ public class LogsActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    public void onClickCleanLogs(View v) throws IOException {
+        Util.cleanProperties(this, "logs");
+        tvLogs.setText(null);
+    }
+
     @Override
     public boolean onSupportNavigateUp(){
         finish();
         return true;
     }
+
+
+
 
 }

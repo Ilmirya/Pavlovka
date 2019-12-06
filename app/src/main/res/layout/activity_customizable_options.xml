@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
+
+
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
@@ -336,16 +338,6 @@
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
-    <Button
-        android:id="@+id/button1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:background="#5ABEB4"
-        android:elevation="4dp"
-        android:onClick="onClickSaveOptions"
-        android:text="Сохранить"
-        android:textColor="#FFFFFF"
-        android:scaleType="fitEnd"/>
+
 
 </LinearLayout>
