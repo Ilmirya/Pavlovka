@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
@@ -108,10 +109,29 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent1);
                 return true;
             case R.id.Exit:
-                finishAffinity();
-                Intent intente = new Intent(this, MyService.class);
-                myService.IsActivity(true);
-                stopService(intente);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                {
+                    finishAndRemoveTask();
+                    Intent intente = new Intent(this, MyService.class);
+                    myService.IsActivity(true);
+                    stopService(intente);
+                } else
+                {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+                    {
+                        finishAffinity();
+                        Intent intente = new Intent(this, MyService.class);
+                        myService.IsActivity(true);
+                        stopService(intente);
+                    } else
+                    {
+                        finish();
+                        Intent intente = new Intent(this, MyService.class);
+                        myService.IsActivity(true);
+                        stopService(intente);
+                    }
+                }
+                android.os.Process.killProcess(android.os.Process.myPid());
             default:
                 return super.onOptionsItemSelected(item);
         }
