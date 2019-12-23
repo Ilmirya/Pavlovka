@@ -261,8 +261,8 @@ public class MainActivity extends AppCompatActivity {
                         if(buffer[2] == 0x04){
                             Date dtNow = new Date();
                             pressure = ByteBuffer.wrap(new byte[]{buffer[5],buffer[6],buffer[3],buffer[4]}).getFloat();
-                            height = pressure;
-                            strTmp = simpleDateFormat.format(dtNow) + "->" + formatDouble.format(height) + "("+ formatDouble.format(pressure) +")";
+                            height = (float) (pressure*1.03);
+                            strTmp = simpleDateFormat.format(dtNow) + "->" + formatDouble.format(height);
                         }
                         if(buffer[2] == 0x02){
                             wls = (int)buffer[4];

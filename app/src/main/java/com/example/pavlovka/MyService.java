@@ -109,8 +109,7 @@ public class MyService extends Service {
         startForeground(1, notification);
     }
 
-    public void stopService() {
-    }
+
 
     class MyRun implements Runnable {
         public void run() {

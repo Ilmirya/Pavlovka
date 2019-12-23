@@ -31,7 +31,7 @@ public class ApiQuery {
     }
     public Gson gson = new Gson();
     public String gSessionId = "";
-
+    MyService myService = new MyService();
     ArrayList<String> logsList = new ArrayList<>();
     boolean isAdmin = false;
     public String AuthByLogin(Context context, String login, String password){
@@ -107,11 +107,28 @@ public class ApiQuery {
     }
 
     public Boolean Poll(String objectId, String cmd, String components, Context context){
+        if(isAdmin == false){
+        try {
+            isAdmin = Boolean.parseBoolean(Util.getProperty("isAdmin", context));
+        } catch (IOException exc) {
+            Util.logsException(exc.getMessage(), context);
+        }}
         if(!isAdmin) return true;
         Poll poll = new Poll();
         poll.setPoll1(new String[]{objectId}, cmd, components);
         Message answer = MessageExecute("poll", poll, context);
-        if(answer == null || answer.getHead() == null) return false;
+        if(answer == null || answer.getHead() == null)
+        {
+            boolean isNotConnection = false;
+            try{
+                isNotConnection = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isNotConnection", "false",context));
+            }
+            catch (Exception ex){
+                ex.fillInStackTrace();
+            }
+            myService.sendNotif(Const.notConnectionToServer, "", Const.notifNotConnecion, isNotConnection);
+            return false;
+        }
         String what = answer.getHead().getWhat();
         if(what.equals("poll-accepted")){
             try {
