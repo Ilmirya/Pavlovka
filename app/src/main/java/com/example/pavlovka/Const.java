@@ -7,12 +7,13 @@ public class Const {
     public static final String IpAddressWls = "77.94.120.165";
     public static final Integer wlsPort = 5001;
 
-    public final static String objectIdUpp = "facfda23-daaf-4491-819a-84de67a71579";
+    public final static String objectIdUpp = "facfda23-daaf-4491-819a-84de67a71579";//"facfda23-daaf-4491-819a-84de67a71579"
     public final static String objectIdWLS = "8e7162dc-eb4a-4da0-ba8d-18d440356d89";
     public final static Integer Error = 0;
     public final static Integer Success = 1;
     public final static Integer Session = 2;
     public final static Integer ClosedService = 3;
+    public final static Integer Exit = 4;
 
     public final static Integer ActivDestroy = 77;
     public final static Integer ActivCreate = 2;

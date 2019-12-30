@@ -31,7 +31,6 @@ public class ApiQuery {
     }
     public Gson gson = new Gson();
     public String gSessionId = "";
-    MyService myService = new MyService();
     ArrayList<String> logsList = new ArrayList<>();
     boolean isAdmin = false;
     public String AuthByLogin(Context context, String login, String password){
@@ -83,6 +82,9 @@ public class ApiQuery {
     }
     public Message MessageExecute (String what, Object body, Context context){
         Message message = new Message();
+        if(gSessionId == null || gSessionId == ""){
+            isGetSession(context);
+        }
         message.setHead(what, gSessionId);
         message.setBody(body);
         String json = gson.toJson(message);
@@ -107,38 +109,31 @@ public class ApiQuery {
     }
 
     public Boolean Poll(String objectId, String cmd, String components, Context context){
-        if(isAdmin == false){
-        try {
-            isAdmin = Boolean.parseBoolean(Util.getProperty("isAdmin", context));
-        } catch (IOException exc) {
-            Util.logsException(exc.getMessage(), context);
-        }}
-        if(!isAdmin) return true;
-        Poll poll = new Poll();
-        poll.setPoll1(new String[]{objectId}, cmd, components);
-        Message answer = MessageExecute("poll", poll, context);
-        if(answer == null || answer.getHead() == null)
-        {
-            boolean isNotConnection = false;
-            try{
-                isNotConnection = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isNotConnection", "false",context));
-            }
-            catch (Exception ex){
-                ex.fillInStackTrace();
-            }
-            myService.sendNotif(Const.notConnectionToServer, "", Const.notifNotConnecion, isNotConnection);
-            return false;
-        }
-        String what = answer.getHead().getWhat();
-        if(what.equals("poll-accepted")){
+        if(!isAdmin){
             try {
-                Thread.sleep(1000 * 3);
-                return true;
-            } catch (InterruptedException exc) {
-                if(logsReplay(exc.getMessage())){
-                    Util.logsException(exc.getMessage(),context);
+                isAdmin = Boolean.parseBoolean(Util.getProperty("isAdmin", context));
+            } catch (IOException exc) {
+                Util.logsException(exc.getMessage(), context);
+            }
+        }
+        if(!isAdmin) return true;
+        try{
+            Poll poll = new Poll();
+            poll.setPoll1(new String[]{objectId}, cmd, components);
+            Message answer = MessageExecute("poll", poll, context);
+            String what = answer.getHead().getWhat();
+            if(what.equals("poll-accepted")){
+                try {
+                    Thread.sleep(1000 * 3);
+                    return true;
+                } catch (InterruptedException exc) {
+                    if(logsReplay(exc.getMessage())){
+                        Util.logsException(exc.getMessage(),context);
+                    }
                 }
             }
+        }catch (Exception ex){
+            ex.fillInStackTrace();
         }
         return false;
     }
@@ -181,7 +176,7 @@ public class ApiQuery {
 
     public RecordsFromQueryDB[] QueryFromDatabase(Context context){
         Calendar calStart = Calendar.getInstance();
-        calStart.add(Calendar.MINUTE,-25);
+        calStart.add(Calendar.MINUTE,-25);//25
         Date dtStart = calStart.getTime();
         Calendar calendarNow = Calendar.getInstance();
         calendarNow.add(Calendar.MINUTE, 20);

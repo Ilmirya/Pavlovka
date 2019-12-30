@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Menu;
@@ -29,6 +30,11 @@ public class SigninActivity extends AppCompatActivity {
         etLogin = findViewById(R.id.etLogin);
         etPassword = findViewById(R.id.etPassword);
         tvMessageSignin = findViewById(R.id.tvMessageSignin);
+        if(!Util.isConnectionInternet(this)){
+            Util.logsError(Const.notConnectionToInternet,this);
+            tvMessageSignin.setText(Const.notConnectionToInternet);
+            return;
+        }
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -43,6 +49,26 @@ public class SigninActivity extends AppCompatActivity {
                 Intent intent1 = new Intent(this, LogsActivity.class);
                 startActivity(intent1);
                 return true;
+            case R.id.ExitSignin:
+
+                Intent answerIntent = new Intent();
+                answerIntent.putExtra("Exit", true);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                {
+                    setResult(Const.Exit, answerIntent);
+                    finishAndRemoveTask();
+                } else
+                {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+                    {
+                        setResult(Const.Exit, answerIntent);
+                        finishAffinity();
+                    } else
+                    {
+                        setResult(Const.Exit, answerIntent);
+                        finish();
+                    }
+                }
             default:
                 return super.onOptionsItemSelected(item);
         }

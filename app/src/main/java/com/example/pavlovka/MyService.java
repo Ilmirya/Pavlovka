@@ -21,9 +21,14 @@ import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
+import java.io.IOException;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -60,7 +65,7 @@ public class MyService extends Service {
     private boolean gIsNotConnected = true;
     public boolean gIsAdmin = false, gIsAutoQueryByDiscrepancy = false;
     private int lastSendNotifId = -1;
-
+    public int IdService;
     public MyService() {
     }
     public void onCreate() {
@@ -87,7 +92,6 @@ public class MyService extends Service {
     private void startForeground() {
         Intent notificationIntent = new Intent(this, MainActivity.class);
         String CHANNEL_ID = "channel_00";
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "channel";
             String Description = "This is my channel";
@@ -97,7 +101,6 @@ public class MyService extends Service {
             mChannel.setShowBadge(false);
             notificationManager.createNotificationChannel(mChannel);
         }
-
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID) // don't forget create a notification channel first
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -118,22 +121,20 @@ public class MyService extends Service {
                 public void run() {
                     gSessionId = ApiQuery.Instance().isGetSession(MyService.this);
                     if(gSessionId == null || gSessionId == ""){
-                        if(gIsNotConnected){
-                            Intent intent = new Intent().putExtra("tvHeightWaters", Const.notConnectionToServer);
-                            try {
-                                pendingIntent.send(MyService.this,Const.Error,intent);
-                            } catch (PendingIntent.CanceledException e) {
-                                e.printStackTrace();
-                            }
-                            boolean isNotConnection = false;
-                            try{
-                                isNotConnection = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isNotConnection", "false",MyService.this));
-                            }
-                            catch (Exception ex){
-                                ex.fillInStackTrace();
-                            }
-                            sendNotif(Const.notConnectionToServer, "", Const.notifNotConnecion, isNotConnection);
+                        Intent intent = new Intent().putExtra("tvHeightWaters", Const.notConnectionToServer);
+                        try {
+                            pendingIntent.send(MyService.this,Const.Error,intent);
+                        } catch (PendingIntent.CanceledException e) {
+                            e.printStackTrace();
                         }
+                        boolean isNotConnection = false;
+                        try{
+                            isNotConnection = Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isNotConnection", "false",MyService.this));
+                        }
+                        catch (Exception ex){
+                            ex.fillInStackTrace();
+                        }
+                        sendNotif(Const.notConnectionToServer, "", Const.notifNotConnecion, isNotConnection);
                         gIsNotConnected = true;
                     }else{
                         if ((connection == null) || (connection.getState() != ConnectionState.Connected)||(!isPingOk))
@@ -146,7 +147,7 @@ public class MyService extends Service {
                         MainFunction();
                     }
                 }
-            },0, 1000 * 60 * 5);
+            },0, 1000 * 60* 5);
 
             timer1.schedule(new TimerTask() {
                 @Override
@@ -157,10 +158,10 @@ public class MyService extends Service {
         }
     }
     void sendNotif(String contentText, String contentInfo, int notfiId, boolean isNotifOn) {
+        if(!isNotifOn) return;
         if(lastSendNotifId == notfiId) return;
         lastSendNotifId = notfiId;
         Util.logsError(contentText,this);
-        if(isActivity || !isNotifOn) return;
         String CHANNEL_ID = "channel_01";
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             CharSequence name = "channel";
@@ -207,6 +208,7 @@ public class MyService extends Service {
         }
         timer.cancel();
         timer1.cancel();
+        stopForeground(true);
         stopSelf();
     }
     void IsActivity(boolean isact){
@@ -317,6 +319,40 @@ public class MyService extends Service {
             VerificationMainFunction();
             return;
         }
+
+        ArrayList<RecordsFromQueryDB> recordsLastStartTime = Helper.GetRecordsByType(records, "lastStartTime");
+        ArrayList<RecordsFromQueryDB> recordsLastStopTime = Helper.GetRecordsByType(records, "lastStopTime");
+        DateFormat formatter = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
+        Date dtKey = new Date();
+        for(RecordsFromQueryDB rec : recordsLastStartTime){
+            try {
+                dtKey = formatter.parse(rec.getS2());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            if(dtKey.getYear() >= new Date().getYear() - 1){
+
+                try {
+                    Util.setProperty(rec.getS2(), "start", MyService.this, "startStopTime");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        for(RecordsFromQueryDB rec : recordsLastStopTime){
+            try {
+                dtKey = formatter.parse(rec.getS2());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            if(dtKey.getYear() >= new Date().getYear() - 1){
+                try {
+                    Util.setProperty(rec.getS2(), "stop", MyService.this, "startStopTime");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         sendInActive(records);
 
         String[] arrUpp = recordUpp.getS2().split("; ");
@@ -362,7 +398,7 @@ public class MyService extends Service {
 
         if(dtUppStop != null){
             if(Helper.getDateDiff(dtUppStop, dtTmp, TimeUnit.MINUTES) > maxTimeStop){
-                sendNotif("УПП находится в стопе более чем " + maxTimeStop + " мин", "", Const.notifMaxTimeStop,isMaxTimeStop);
+                sendNotif("УПП находится в стопе более чем " + maxTimeStop + " мин", "", Const.notifMaxTimeStop, isMaxTimeStop);
             }
         }
         if(isMotorStart && motorCurrent < proc2){

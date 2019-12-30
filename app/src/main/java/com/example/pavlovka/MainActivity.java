@@ -57,11 +57,6 @@ public class MainActivity extends AppCompatActivity {
         tvMonitoringWls = findViewById(R.id.tvMonitoringWls);
         String login = "", password = "";
 
-        if(!Util.isConnectionInternet(this)){
-            Util.logsError(Const.notConnectionToInternet,this);
-            tvHeightWaters.setText(Const.notConnectionToInternet);
-            return;
-        }
         try {
             login = Util.getProperty("login", this);
             password = Util.getProperty("password", this);
@@ -73,6 +68,11 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(intentSignin, Const.Session);
         }
         else{
+            if(!Util.isConnectionInternet(this)){
+                Util.logsError(Const.notConnectionToInternet,this);
+                tvHeightWaters.setText(Const.notConnectionToInternet);
+                return;
+            }
             FunctionAtStart();
         }
     }
@@ -80,7 +80,9 @@ public class MainActivity extends AppCompatActivity {
         myService = new MyService();
         PendingIntent pendingIntent = createPendingResult(1, new Intent(),0  );
         Intent intent = new Intent(this, MyService.class).putExtra("pendingIntent", pendingIntent);
+       //myService.stopForeground(true);
         stopService(intent);
+        myService.stopSelf();
         myService.IsActivity(true);
         startService(intent);
         new Thread(new Runnable() {
@@ -101,34 +103,35 @@ public class MainActivity extends AppCompatActivity {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.CustomizableOptionsActivity:
-                Intent intent = new Intent(this, CustomizableOptionsActivity.class);
-                startActivity(intent);
+                Intent intentCustomizableOptionsActivity = new Intent(this, CustomizableOptionsActivity.class);
+                startActivity(intentCustomizableOptionsActivity);
                 return true;
             case R.id.LogsActivity:
-                Intent intent1 = new Intent(this, LogsActivity.class);
-                startActivity(intent1);
+                Intent intentLogsActivity = new Intent(this, LogsActivity.class);
+                startActivity(intentLogsActivity);
+                return true;
+            case R.id.StartStopTimeActivity:
+                Intent intentStartStopTimeActivity = new Intent(this, StartStopTimeActivity.class);
+                startActivity(intentStartStopTimeActivity);
                 return true;
             case R.id.Exit:
+                PendingIntent pendingIntent = createPendingResult(1, new Intent(),0  );
+                Intent intentExit = new Intent(this, MyService.class).putExtra("pendingIntent", pendingIntent);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
                 {
                     finishAndRemoveTask();
-                    Intent intente = new Intent(this, MyService.class);
-                    myService.IsActivity(true);
-                    stopService(intente);
+                    stopService(intentExit);
                 } else
                 {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
                     {
                         finishAffinity();
-                        Intent intente = new Intent(this, MyService.class);
-                        myService.IsActivity(true);
-                        stopService(intente);
+                        stopService(intentExit);
                     } else
                     {
                         finish();
-                        Intent intente = new Intent(this, MyService.class);
-                        myService.IsActivity(true);
-                        stopService(intente);
+                        stopService(intentExit);
+
                     }
                 }
                 android.os.Process.killProcess(android.os.Process.myPid());
@@ -147,7 +150,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        myService.IsActivity(false);
     }
     public void onClickWlsCardView(View view){
         sendMessage();
@@ -156,8 +158,16 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if(ApiQuery.Instance().Poll(Const.objectIdUpp,"","Current", MainActivity.this)){
-                    MainFunction();
+                try{
+                    if(ApiQuery.Instance().Poll(Const.objectIdUpp,"","Current", MainActivity.this)){
+                        MainFunction();
+                    }
+                    else{
+                        tvHeightWaters.setText(Const.notConnectionToServer);
+                    }
+                }
+                catch (Exception ex){
+                    ex.fillInStackTrace();
                 }
             }
         }).start();
@@ -167,16 +177,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(resultCode == Const.Session){
-            FunctionAtStart();
-        }
-        if(resultCode == Const.ClosedService){
-
-        }
         if (resultCode == Const.Error) {
             tvHeightWaters.setText(data.getStringExtra("tvHeightWaters"));
         }
-        if (resultCode == Const.Success) {
+        else if (resultCode == Const.Success) {
             tvHeightWaters.setText(data.getStringExtra("tvHeightWaters"));
             tvLastStartTime.setText(data.getStringExtra("tvLastStartTime"));
             tvLastStopTime.setText(data.getStringExtra("tvLastStopTime"));
@@ -186,6 +190,28 @@ public class MainActivity extends AppCompatActivity {
             tvLastUpdate.setText(data.getStringExtra("tvLastUpdate"));
             myProgressBar.setProgress(data.getIntExtra("myProgressBar",0));
             tvTimeDataWls.setText(data.getStringExtra("tvTimeDataWls"));
+        }
+        else if(resultCode == Const.Session){
+            FunctionAtStart();
+        }
+        else if(resultCode == Const.Exit){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            {
+                finishAndRemoveTask();
+            } else
+            {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+                {
+                    finishAffinity();
+                } else
+                {
+                    finish();
+                }
+            }
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }
+        else if(resultCode == Const.ClosedService){
+
         }
     }
 
@@ -205,11 +231,30 @@ public class MainActivity extends AppCompatActivity {
                 int[] bytesSendHeight = new int[]{0x10,0x04,0x0B,0x00,0x00,0x02,0x70,0xAE};
                 try {
                     for(int i = 0; i < bytesSendHeight.length; i++){
-                        mBufferOut.writeByte(bytesSendHeight[i]);
+                        try{
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    tvMonitoringWls.setText("!");
+                                }
+                            });
+                            mBufferOut.writeByte(bytesSendHeight[i]);
+                        }catch (Exception ex){
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    tvMonitoringWls.setText("?");
+                                }
+                            });
+                            ex.printStackTrace();
+                        }
                     }
-
-                    mBufferOut.flush();
-                } catch (IOException e) {
+                    try{
+                        mBufferOut.flush();
+                    }catch (Exception ex){
+                        ex.printStackTrace();
+                    }
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -221,10 +266,23 @@ public class MainActivity extends AppCompatActivity {
                 int[] bytesSendWls = new int[]{0x10,0x04,0x01,0x00,0x00,0x01,0x33,0x77};
                 try {
                     for(int i = 0; i < bytesSendWls.length; i++){
-                        mBufferOut.writeByte(bytesSendWls[i]);
+                        try{
+                            mBufferOut.writeByte(bytesSendWls[i]);
+                        }catch (Exception ex){
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    tvMonitoringWls.setText("?");
+                                }
+                            });
+                        }
                     }
-                    mBufferOut.flush();
-                } catch (IOException e) {
+                    try{
+                        mBufferOut.flush();
+                    }catch (Exception ex){
+                        ex.printStackTrace();
+                    }
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 try {
@@ -252,7 +310,6 @@ public class MainActivity extends AppCompatActivity {
             int wls;
             NumberFormat formatDouble = new DecimalFormat("#00.00");
             String strTmp = "";
-
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
             while (true){
                 try{
@@ -278,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 catch (Exception exc){
-
+                    Util.logsException(exc.getMessage(),this);
                 }
             }
 

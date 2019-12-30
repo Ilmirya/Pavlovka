@@ -46,7 +46,6 @@ public class Util {
         fileInputStream.flush();
         fileInputStream.close();
     }
-
     public static void setProperty(String key, String value, Context context, String fileName) throws IOException {
         if(value == null) return;
         Properties properties = new Properties();
@@ -71,11 +70,27 @@ public class Util {
             for(String keyTmp : listKeys){
                 Date dtKey = new Date();
                 DateFormat formatter = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
-                try {
-                    dtKey = formatter.parse(keyTmp.split("#")[1]);
-                } catch (ParseException e) {
-                    e.printStackTrace();
+                if(fileName.equals("logs")){
+                    try {
+                        if(keyTmp.split("#").length > 1)
+                        {
+                            dtKey = formatter.parse(keyTmp.split("#")[1]);
+                        }
+                        else{
+                            properties.remove(keyTmp);
+                        }
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
                 }
+                else{
+                    try {
+                        dtKey = formatter.parse(keyTmp);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 if(dtTmp.after(dtKey)){
                     strKey = keyTmp;
                     dtTmp = dtKey;
@@ -102,7 +117,6 @@ public class Util {
         FileOutputStream fileOutputStream = new FileOutputStream(context.getFilesDir()+"/config.properties");
         properties.store(fileOutputStream,null);
     }
-
 
     public static void logsInfo(String value, Context context){
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
@@ -134,7 +148,7 @@ public class Util {
             StackTraceElement element = trace[1];
             tmp = element.getClassName() + "." + element.getMethodName() + " [" + element.getLineNumber() + "] ";
         }
-        logsError(tmp + value,context);
+        logsError(tmp + value, context);
     }
     public static boolean isConnectionInternet(final Context context)
     {

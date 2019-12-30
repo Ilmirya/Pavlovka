@@ -13,29 +13,32 @@
         android:label="MatrixIT"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
         android:testOnly="false"
-        android:theme="@style/AppTheme">
-        <activity android:name=".SigninActivity"
-            android:windowSoftInputMode="stateHidden"/>
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+        <activity android:name=".StartStopTimeActivity"></activity>
+        <activity
+            android:name=".SigninActivity"
+            android:windowSoftInputMode="stateHidden" />
         <activity android:name=".LogsActivity" />
         <activity
             android:name=".CustomizableOptionsActivity"
-            android:windowSoftInputMode="stateHidden"/>
+            android:windowSoftInputMode="stateHidden" />
 
         <service
             android:name=".MyService"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>
