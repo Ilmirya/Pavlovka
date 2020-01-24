@@ -176,7 +176,7 @@ public class ApiQuery {
 
     public RecordsFromQueryDB[] QueryFromDatabase(Context context){
         Calendar calStart = Calendar.getInstance();
-        calStart.add(Calendar.MINUTE,-25);//25
+        calStart.add(Calendar.MINUTE,-25);//-25
         Date dtStart = calStart.getTime();
         Calendar calendarNow = Calendar.getInstance();
         calendarNow.add(Calendar.MINUTE, 20);

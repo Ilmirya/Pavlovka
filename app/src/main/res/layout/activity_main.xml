@@ -32,6 +32,7 @@
             app:cardBackgroundColor="#632182"
             app:cardCornerRadius="7dp"
             app:cardElevation="4dp"
+
             >
             <LinearLayout
                 android:layout_width="match_parent"
@@ -68,6 +69,29 @@
                         android:layout_marginRight="10dp"
                         android:textStyle="bold"
                         android:layout_weight="14"
+                        />
+                    <com.jaygoo.widget.VerticalRangeSeekBar
+                        android:id="@+id/sb_vertical_8"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        app:rsb_gravity="bottom"
+                        app:rsb_indicator_height="40dp"
+                        app:rsb_indicator_show_mode="alwaysShowAfterTouch"
+                        app:rsb_indicator_width="20dp"
+                        app:rsb_mode="range"
+                        app:rsb_progress_color="@color/colorAccent"
+                        app:rsb_thumb_drawable="@drawable/thumb_green_alpha"
+                        app:rsb_min="0.5"
+                        app:rsb_max="13.7"
+                        app:rsb_thumb_scale_ratio="1.2"
+                        app:rsb_thumb_width="20dp"
+                        app:rsb_thumb_height="20dp"
+                        app:rsb_tick_mark_gravity="center"
+                        app:rsb_tick_mark_layout_gravity="bottom"
+                        app:rsb_tick_mark_mode="number"
+                        app:rsb_tick_mark_text_array="@array/markArray4"
+                        app:rsb_tick_mark_text_margin="10dp"
+                        app:rsb_tick_mark_text_size="10sp"
                         />
                     <ProgressBar
                         android:id="@+id/pbWatersLevel"
@@ -111,6 +135,7 @@
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
+
         <!--row2 -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"

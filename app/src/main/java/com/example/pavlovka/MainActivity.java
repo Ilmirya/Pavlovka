@@ -1,40 +1,46 @@
 package com.example.pavlovka;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import android.view.Menu;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
 import com.google.gson.Gson;
+import com.jaygoo.widget.OnRangeChangedListener;
+import com.jaygoo.widget.RangeSeekBar;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.DataOutputStream;
-import java.net.Socket;
 import java.util.Date;
 import java.util.concurrent.Executor;
-import java.nio.ByteBuffer;
 
 
 public class MainActivity extends AppCompatActivity {
     TextView tvMotor, tvUPPMain, tvUPPSecondary, tvHeightWaters, tvLastStartTime, tvLastStopTime, tvLastUpdate, tvUpp, tvTimeDataWls,tvMonitoringWls;
     public Gson gson = new Gson();
+    private RangeSeekBar rangeSeekBar;
+    private float rightSeekBar= (float)13.5;
+    private float leftSeekBar= (float)7.0;
 
     Handler handler = new Handler();
     public  MyService myService;
@@ -55,6 +61,11 @@ public class MainActivity extends AppCompatActivity {
         tvUpp = findViewById(R.id.tvUpp);
         tvTimeDataWls = findViewById(R.id.tvTimeDataWls);
         tvMonitoringWls = findViewById(R.id.tvMonitoringWls);
+
+        rangeSeekBar = findViewById(R.id.sb_vertical_8);
+        rangeSeekBar.getLeftSeekBar().setIndicatorTextDecimalFormat("0.0");
+        rangeSeekBar.getRightSeekBar().setIndicatorTextDecimalFormat("0.0");
+        rangeSeekBar.setProgress(leftSeekBar, rightSeekBar);
         String login = "", password = "";
 
         try {
@@ -75,6 +86,58 @@ public class MainActivity extends AppCompatActivity {
             }
             FunctionAtStart();
         }
+
+        rangeSeekBar.setOnRangeChangedListener(new OnRangeChangedListener() {
+            @Override
+            public void onRangeChanged(RangeSeekBar view, float leftValue, float rightValue, boolean isFromUser) {
+              //  float m = rangeSeekBar.getRightSeekBar().getProgress();
+               // rangeSeekBar.setProgress(5,10);
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(RangeSeekBar view, boolean isLeft) {
+               // float m = rangeSeekBar.getRightSeekBar().getProgress();
+            }
+
+            @Override
+            public void onStopTrackingTouch(RangeSeekBar view, boolean isLeft) {
+            //    float m = rangeSeekBar.getRightSeekBar().getProgress();
+                if(isLeft) {
+                    if (rangeSeekBar.getLeftSeekBar().getProgress() < 7)
+                        rangeSeekBar.setProgress(7, rightSeekBar);
+                    if (rangeSeekBar.getLeftSeekBar().getProgress() > (rightSeekBar-1))
+                        rangeSeekBar.setProgress(rightSeekBar-1, rightSeekBar);
+                }
+                else
+                {
+                    if (rangeSeekBar.getRightSeekBar().getProgress() > 13.5)
+                        rangeSeekBar.setProgress(leftSeekBar, (float) 13.5);
+                    if (rangeSeekBar.getRightSeekBar().getProgress() < (leftSeekBar+1))
+                        rangeSeekBar.setProgress(leftSeekBar, leftSeekBar+1);
+                }
+                rightSeekBar =  rangeSeekBar.getRightSeekBar().getProgress();
+                leftSeekBar = rangeSeekBar.getLeftSeekBar().getProgress();
+
+                if (leftSeekBar>rightSeekBar) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Предупреждение")
+                            .setMessage("leftSeekBar>rightSeekBar")
+                            .setCancelable(false)
+                            .setNegativeButton("ОК",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            dialog.cancel();
+                                        }
+                                    });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
+            }
+
+
+        });
+
     }
     private void FunctionAtStart(){
         myService = new MyService();
@@ -135,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 android.os.Process.killProcess(android.os.Process.myPid());
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -359,6 +423,7 @@ public class MainActivity extends AppCompatActivity {
                     tvHeightWaters.setText("\n\n" + Const.ifDataNull);
                 }
             });
+            //requestSmsPermission();
             return;
         }
         RecordsFromQueryDB recordsUpp = Helper.GetLastRecordByType(records,"upp");
@@ -451,4 +516,46 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+
+
+/*
+    public String phone = "89174242238";
+    public String message = "0000;RESET";
+    private static final int PERMISSION_SEND_SMS = 123;
+
+    public void requestSmsPermission() {
+
+        // check permission is given
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            // request permission (see result in onRequestPermissionsResult() method)
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.SEND_SMS},
+                    PERMISSION_SEND_SMS);
+        } else {
+            // permission already granted run sms send
+            sendSms(phone, message);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_SEND_SMS: {
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted
+                    sendSms(phone, message);
+                } else {
+                    // permission denied
+                }
+                return;
+            }
+        }
+    }
+
+    private void sendSms(String phoneNumber, String message){
+        SmsManager sms = SmsManager.getDefault();
+        sms.sendTextMessage(phoneNumber, null, message, null, null);
+    }*/
 }

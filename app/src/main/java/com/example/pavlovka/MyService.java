@@ -28,7 +28,6 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -55,6 +54,9 @@ public class MyService extends Service {
     public boolean isEnterInFunc  =false;
     public Connection  connection = null;
     public int countVisit = 0;
+
+
+
     private boolean isPingOk = false;
     private Date dtUppStop;
 
@@ -85,17 +87,17 @@ public class MyService extends Service {
         if(pendingIntent != null){
             MyRun mr = new MyRun();
             es.execute(mr);
-            startForeground();
+            startForeground(6000, "Service is running background");
         }
         return super.onStartCommand(intent, flags, startId);
     }
-    private void startForeground() {
+    private void startForeground(int color, String text) {
         Intent notificationIntent = new Intent(this, MainActivity.class);
         String CHANNEL_ID = "channel_00";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "channel";
             String Description = "This is my channel";
-            int importance = NotificationManager.IMPORTANCE_HIGH;
+            int importance = NotificationManager.IMPORTANCE_NONE;
             NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
             mChannel.setDescription(Description);
             mChannel.setShowBadge(false);
@@ -106,8 +108,10 @@ public class MyService extends Service {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setOngoing(true)
                 .setContentTitle(getString(R.string.app_name))
-                .setContentText("Service is running background")
+                .setContentText(text)
                 .setContentIntent(pendingIntent)
+                .setColor(color)
+                .setSound(null)
                 .build();
         startForeground(1, notification);
     }
@@ -509,6 +513,13 @@ public class MyService extends Service {
         } catch (PendingIntent.CanceledException e) {
             Util.logsException(e.getMessage(),this);
         }
+        int color = 0x32CD32;
+        strHeight = "Высота,м: " + formatDouble.format(height) +"; WLS: " +  Integer.toBinaryString((int)(recordWls.getD1d()));
+        strMotor = strMotor.replace("насос\n", "");
+        if (recordHeight.getD1d()<11) color = 0xFF1493;
+        if ((int)(recordWls.getD1d())==0) color = 0xFF1493;
+        startForeground(color, strHeight+"; "+strMotor  );
+
     }
 
     public void VerificationMainFunction(){
@@ -560,6 +571,7 @@ public class MyService extends Service {
             return;
         }
         sendInActive(records);
+        //
         String strMotor = "насос: ", contentText;
         String[] arrUpp = recordsUpp.getS2().split("; ");
         boolean isMotorStart = false;
@@ -604,4 +616,6 @@ public class MyService extends Service {
             }
         }
     }
+
+
 }
