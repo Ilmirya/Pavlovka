@@ -336,7 +336,31 @@
                     android:textSize="14sp"
                     android:text="Автоматический опрос при несоответствиях"/>
             </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:layout_weight="4"
+                    android:gravity="center_vertical"
+                    android:text="Вариант управления"
+                    android:textSize="14sp" />
+
+                <Spinner
+                    android:id="@+id/spinner"
+                    android:layout_width="244dp"
+                    android:layout_height="match_parent"></Spinner>
+            </LinearLayout>
+
         </LinearLayout>
+
     </ScrollView>
 
 

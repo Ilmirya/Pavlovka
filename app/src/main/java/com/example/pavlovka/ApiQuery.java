@@ -6,7 +6,9 @@ import com.example.pavlovka.Classes.Auth.AuthBySession.AuthBySession;
 import com.example.pavlovka.Classes.GetSessionidd.BodyFromSession;
 import com.example.pavlovka.Classes.GetSessionidd.SessionJson;
 import com.example.pavlovka.Classes.GetSessionidd.UserFromBodySession;
+import com.example.pavlovka.Classes.ExportWaterTower;
 import com.example.pavlovka.Classes.Message;
+import com.example.pavlovka.Classes.NodeWaterTower;
 import com.example.pavlovka.Classes.Poll;
 import com.example.pavlovka.Classes.QueryFromDatabase.QueryDB;
 import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
@@ -195,5 +197,28 @@ public class ApiQuery {
             }
         }
         return null;
+    }
+
+    public ExportWaterTower ExportWatertower(Context context){
+        ExportWaterTower exportWaterTower = new ExportWaterTower();
+        exportWaterTower.setWaterTower(Const.objectIdUpp);
+        Message message = MessageExecute( "export-watertower", exportWaterTower, context);
+        String json1 = gson.toJson(message.getBody());
+        ExportWaterTower exportWaterTower1 = gson.fromJson(json1, ExportWaterTower.class);
+        return exportWaterTower1;
+
+    }
+
+    public void NodeWatertower(final Float max, final Float min, final int controlMode, final Context context){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                NodeWaterTower nodeWaterTower = new NodeWaterTower();
+                nodeWaterTower.setNodeWaterTower(Const.objectIdUpp, max, min, controlMode);
+                Message message = MessageExecute( "node-watertower", nodeWaterTower, context);
+                String json1 = gson.toJson(message.getBody());
+            }
+        }).start();
+
     }
 }

@@ -22,6 +22,10 @@ public class Const {
     public final static String notConnectionToServer = "Нет соединения с сервером";
     public final static String notConnectionToInternet = "Нет подключения к интернету";
 
+    public final static String strHight = "\n"+"Высота, м:" +"\n" +"\n" + "Заполн., %:" +"\n"+"\n" + "WLS:"+"\n" +"\n";
+    public final static String strCurr = "1";
+
+
     public final static Integer notifNotConnecion = 0;
     public final static Integer notifDataNull = 1;
     public final static Integer notifWlsLessThanWlsmin_Stop = 2;

@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.pavlovka.Classes.ExportWaterTower;
 import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
 import com.google.gson.Gson;
 import com.jaygoo.widget.OnRangeChangedListener;
@@ -32,15 +33,29 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Executor;
 
 
 public class MainActivity extends AppCompatActivity {
-    TextView tvMotor, tvUPPMain, tvUPPSecondary, tvHeightWaters, tvLastStartTime, tvLastStopTime, tvLastUpdate, tvUpp, tvTimeDataWls,tvMonitoringWls;
+    TextView tvMotor, tvUPPMain, tvUPPSecondary, tvHeightWaters, tvLastStartTime, tvLastStopTime, tvLastUpdate, tvUpp, tvTimeDataWls,tvMonitoringWls, textHight;
     public Gson gson = new Gson();
     private RangeSeekBar rangeSeekBar;
-    private float rightSeekBar= (float)13.5;
-    private float leftSeekBar= (float)7.0;
+    private float rightSeekBar;
+    private float leftSeekBar;
+    private float rightSeekBarPrev;
+    private float leftSeekBarPrev;
+    private int controlMode = 2;
+
+    private double height;
+    private int motorStatus;
+    private int pumpStopTry = 0;
+    private int pumpStartTry = 0;
+    private  float SeekBarMax; //TODO: должно приходить с сервера
+    private  float SeekBarMin;//TODO: должно приходить с сервера
+    private float interval = 1;
+    Timer timer = new Timer();
 
     Handler handler = new Handler();
     public  MyService myService;
@@ -49,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        textHight = findViewById(R.id.strHight);
         myProgressBar = findViewById(R.id.pbWatersLevel);
         tvMotor = findViewById(R.id.tvMotor);
         tvUPPMain = findViewById(R.id.tvUPPMain);
@@ -65,9 +80,11 @@ public class MainActivity extends AppCompatActivity {
         rangeSeekBar = findViewById(R.id.sb_vertical_8);
         rangeSeekBar.getLeftSeekBar().setIndicatorTextDecimalFormat("0.0");
         rangeSeekBar.getRightSeekBar().setIndicatorTextDecimalFormat("0.0");
-        rangeSeekBar.setProgress(leftSeekBar, rightSeekBar);
-        String login = "", password = "";
 
+
+
+
+        String login = "", password = "";
         try {
             login = Util.getProperty("login", this);
             password = Util.getProperty("password", this);
@@ -85,59 +102,114 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             FunctionAtStart();
+            waterTower();
         }
 
         rangeSeekBar.setOnRangeChangedListener(new OnRangeChangedListener() {
             @Override
             public void onRangeChanged(RangeSeekBar view, float leftValue, float rightValue, boolean isFromUser) {
-              //  float m = rangeSeekBar.getRightSeekBar().getProgress();
-               // rangeSeekBar.setProgress(5,10);
-
-            }
-
-            @Override
-            public void onStartTrackingTouch(RangeSeekBar view, boolean isLeft) {
-               // float m = rangeSeekBar.getRightSeekBar().getProgress();
-            }
-
-            @Override
-            public void onStopTrackingTouch(RangeSeekBar view, boolean isLeft) {
-            //    float m = rangeSeekBar.getRightSeekBar().getProgress();
+                boolean isLeft=false;
+                if(leftValue != leftSeekBar) isLeft=true;
                 if(isLeft) {
-                    if (rangeSeekBar.getLeftSeekBar().getProgress() < 7)
-                        rangeSeekBar.setProgress(7, rightSeekBar);
-                    if (rangeSeekBar.getLeftSeekBar().getProgress() > (rightSeekBar-1))
-                        rangeSeekBar.setProgress(rightSeekBar-1, rightSeekBar);
+                    if (rangeSeekBar.getLeftSeekBar().getProgress() < SeekBarMin)
+                        rangeSeekBar.setProgress(SeekBarMin, rightSeekBar);
+                    if (rangeSeekBar.getLeftSeekBar().getProgress() > (rightSeekBar-interval))
+                        rangeSeekBar.setProgress(rightSeekBar-interval, rightSeekBar);
                 }
                 else
                 {
-                    if (rangeSeekBar.getRightSeekBar().getProgress() > 13.5)
-                        rangeSeekBar.setProgress(leftSeekBar, (float) 13.5);
-                    if (rangeSeekBar.getRightSeekBar().getProgress() < (leftSeekBar+1))
-                        rangeSeekBar.setProgress(leftSeekBar, leftSeekBar+1);
+                    if (rangeSeekBar.getRightSeekBar().getProgress() > SeekBarMax)
+                        rangeSeekBar.setProgress(leftSeekBar, SeekBarMax);
+                    if (rangeSeekBar.getRightSeekBar().getProgress() < (leftSeekBar+interval))
+                        rangeSeekBar.setProgress(leftSeekBar, leftSeekBar+interval);
+                    if ((rightSeekBar < height) && (motorStatus == 1))
+                        pumpStopTry = 1;
+                    else pumpStopTry = 0;
+                    if ((leftSeekBar > height) && (motorStatus == 0))
+                        pumpStartTry = 0;
+                    else pumpStartTry = 1;
                 }
                 rightSeekBar =  rangeSeekBar.getRightSeekBar().getProgress();
                 leftSeekBar = rangeSeekBar.getLeftSeekBar().getProgress();
-
-                if (leftSeekBar>rightSeekBar) {
+            }
+            @Override
+            public void onStartTrackingTouch(RangeSeekBar view, boolean isLeft) {
+            }
+            @Override
+            public void onStopTrackingTouch(RangeSeekBar view, boolean isLeft) {
+                String alertMessage = "Вы пытаетесь установить максимальный уровень наполнения башни ниже текущего уровня. Насос будет остановлен.";
+                String btnMessage = "Остановить насос";
+                // "Вы действительно желаете изменить величину максимального уровня заполнения башни?"
+                if (!isLeft)
+                {
+                    if ((pumpStopTry == 0) || (motorStatus == 0))
+                    {
+                        alertMessage = "Вы действительно желаете изменить величину максимального уровня заполнения башни?";
+                        btnMessage = "Применить изменения";
+                    }
                     AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                    builder.setTitle("Предупреждение")
-                            .setMessage("leftSeekBar>rightSeekBar")
+                        builder.setTitle("Предупреждение")
+                                .setMessage(alertMessage)
+                                .setCancelable(false)
+                                .setNegativeButton("Отмена",
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                rightSeekBar = rightSeekBarPrev;
+                                                rangeSeekBar.setProgress(leftSeekBar, rightSeekBarPrev);
+                                                dialog.cancel();
+
+                                            }
+                                        })
+                                .setNeutralButton(btnMessage,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int id) {
+                                                rightSeekBarPrev = rightSeekBar;
+                                                //TODO:  Ильмир
+                                                ApiQuery.Instance().NodeWatertower(rightSeekBar,leftSeekBar,controlMode,MainActivity.this);
+                                                dialog.cancel();
+                                            }
+                                        });
+                        AlertDialog alert = builder.create();
+                        alert.show();
+                }
+                if (isLeft)
+                {
+                    if ((pumpStartTry == 1) || (motorStatus == 1))
+                    {
+                        alertMessage = "Вы действительно желаете изменить величину минимального уровня заполнения башни?";
+                        btnMessage = "Применить изменения";
+                    }
+                    else {
+                        alertMessage = "Вы пытаетесь установить минимальный уровень наполнения башни выше текущего уровня. Насос будет включен.";
+                        btnMessage = "Включить насос";
+                    }
+                    AlertDialog.Builder builder1 = new AlertDialog.Builder(MainActivity.this);
+                    builder1.setTitle("Предупреждение")
+                            .setMessage(alertMessage)
                             .setCancelable(false)
-                            .setNegativeButton("ОК",
+                            .setNegativeButton("Отмена",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog1, int id) {
+                                            leftSeekBar = leftSeekBarPrev;
+                                            rangeSeekBar.setProgress(leftSeekBarPrev, rightSeekBar);
+                                            dialog1.cancel();
+                                        }
+                                    })
+                            .setNeutralButton(btnMessage,
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
+                                            leftSeekBarPrev = leftSeekBar;
+                                            //TODO:  Ильмир
+                                            ApiQuery.Instance().NodeWatertower(rightSeekBar,leftSeekBar,controlMode,MainActivity.this);
                                             dialog.cancel();
                                         }
                                     });
-                    AlertDialog alert = builder.create();
+                    AlertDialog alert = builder1.create();
                     alert.show();
                 }
             }
-
-
         });
-
+        textHight.setText(Const.strHight);
     }
     private void FunctionAtStart(){
         myService = new MyService();
@@ -166,7 +238,11 @@ public class MainActivity extends AppCompatActivity {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.CustomizableOptionsActivity:
-                Intent intentCustomizableOptionsActivity = new Intent(this, CustomizableOptionsActivity.class);
+                Intent intentCustomizableOptionsActivity = new Intent(this, CustomizableOptionsActivity.class)
+                .putExtra("controlMode", controlMode)
+                .putExtra("rightSeekBar", rightSeekBar)
+                .putExtra("leftSeekBar", leftSeekBar);
+
                 startActivity(intentCustomizableOptionsActivity);
                 return true;
             case R.id.LogsActivity:
@@ -194,11 +270,9 @@ public class MainActivity extends AppCompatActivity {
                     {
                         finish();
                         stopService(intentExit);
-
                     }
                 }
                 android.os.Process.killProcess(android.os.Process.myPid());
-
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -254,6 +328,8 @@ public class MainActivity extends AppCompatActivity {
             tvLastUpdate.setText(data.getStringExtra("tvLastUpdate"));
             myProgressBar.setProgress(data.getIntExtra("myProgressBar",0));
             tvTimeDataWls.setText(data.getStringExtra("tvTimeDataWls"));
+            height = data.getDoubleExtra("height",0);
+            motorStatus = data.getIntExtra("motorStatus",-1);
         }
         else if(resultCode == Const.Session){
             FunctionAtStart();
@@ -466,19 +542,19 @@ public class MainActivity extends AppCompatActivity {
                     }
                     break;
                 case "Auto mode":
-                    strUppSecondary += "Auto mode: " + arrTmp[1] + "\n";
+                    strUppSecondary += "Auto mode: " + arrTmp[1] + "; ";
                     break;
                 case "Fault":
-                    strUppSecondary += "Fault: " + arrTmp[1] + "\n";
+                    strUppSecondary += "Fault: " + arrTmp[1] + "; ";
                     break;
                 case "TOR":
-                    strUppSecondary += "TOR: " + arrTmp[1] + "\n";
+                    strUppSecondary += "TOR: " + arrTmp[1] + "; ";
                     break;
                 case "ReadySS":
-                    strUppSecondary += "ReadySS: " + arrTmp[1] + "\n";
+                    strUppSecondary += "ReadySS: " + arrTmp[1] + "; ";
                     break;
                 case "DI":
-                    strUppSecondary += "DI: " + arrTmp[1] + "\n";
+                    strUppSecondary += "DI: " + arrTmp[1];
                     break;
             }
         }
@@ -487,15 +563,15 @@ public class MainActivity extends AppCompatActivity {
         String strUppMain = recordsCurrentPhaseMax != null ? ("Макс.ток фаз,A:\n" + recordsCurrentPhaseMax.getD1s() + "\n") : ("undefined\n");
         strUppMain += recordsMotorCurrent != null ? ("% от номинала:\n" + recordsMotorCurrent.getD1s()) : "undefined";
 
-        double height = recordsHeight.getD1d();
+       double height = recordsHeight.getD1d();
 
-        String strHeight = "Высота,м: " + formatDouble.format(height)+"\n";
+        String strHeight = "\n" + formatDouble.format(height)+"\n";
 
         double percent = height*100/14;
-        strHeight += "Заполн,%: " + formatDouble.format(percent)+"\n";
+        strHeight += "\n" + formatDouble.format(percent)+"\n";
 
         int wls = (int)(recordsWls.getD1d());
-        strHeight += "WLS: " +  Integer.toBinaryString(wls);
+        strHeight += "\n" +  Integer.toBinaryString(wls);
 
         final double height_f = height;
         final String strHeight_f = strHeight, strMotor_f = strMotor, strUppMain_f = strUppMain, strUppSecondary_f = strUppSecondary;
@@ -516,8 +592,38 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void waterTower(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        ExportWaterTower exportWaterTower = ApiQuery.Instance().ExportWatertower(MainActivity.this);
+                        rightSeekBar = Float.parseFloat(exportWaterTower.getMax());
+                        leftSeekBar = Float.parseFloat(exportWaterTower.getMin());
+                        rightSeekBarPrev = rightSeekBar;
+                        leftSeekBarPrev = leftSeekBar;
+                        SeekBarMin = Float.parseFloat(exportWaterTower.getCriticalMin());
+                        SeekBarMax = Float.parseFloat(exportWaterTower.getCriticalMax());
+                        interval = Float.parseFloat(exportWaterTower.getInterval());
+                        controlMode = (int) Float.parseFloat(exportWaterTower.getControlMode());
+                        try{
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    rangeSeekBar.setProgress(leftSeekBar, rightSeekBar);
+                                }
+                            });
+                        }catch (Exception ex){
+                            ex.printStackTrace();
+                        }
 
-
+                    }
+                },0, 1000 * 60* 1);
+            }
+        }).start();
+    }
 
 /*
     public String phone = "89174242238";

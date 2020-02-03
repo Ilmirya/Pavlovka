@@ -1,22 +1,46 @@
 package com.example.pavlovka;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.IOException;
 
 public class CustomizableOptionsActivity extends AppCompatActivity {
-    private EditText etWLSmin2, etWLSmax2, etProc1, etMaxTimeStop, etProc2;
+    private EditText etWLSmin2, etWLSmax2, etProc1, etMaxTimeStop, etProc2, userInput;
     private Switch swhAutoQueryByDiscrepancy, swhWlsLessThenWlsminAndStop, swhWlsMoreThenWlsmaxAndStart,
             swhWlsLessThenWLsmin2AndStart, swhWlsMoreThenWlsmax2AndStart, swhProc1, swhMaxTimeStop, swhProc2,swhDataNull,swhNotConnection;
+    private String[] aItemsMethod = {"Только контроллер", "Сервер и контроллер", "Только сервер"};
+
+    private String password = "111";
+    private String verificationPassword;
+
+    private int controlMode ;
+    private float rightSeekBar;
+    private float leftSeekBar;
+    private int itemCurrentPrev;
+    Spinner spinner;
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_customizable_options);
+
         assert getSupportActionBar() != null;   //null check
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);   //show back button
 
@@ -25,7 +49,11 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         etProc1 = findViewById(R.id.etProc1);
         etMaxTimeStop = findViewById(R.id.etMaxTimeStop);
         etProc2 = findViewById(R.id.etProc2);
+
+
         swhAutoQueryByDiscrepancy = findViewById(R.id.swhAutoQueryByDiscrepancy);
+        getControlMod();
+
 
         swhWlsLessThenWlsminAndStop = findViewById(R.id.swhWlsLessThenWLsminAndStop);
         swhWlsMoreThenWlsmaxAndStart = findViewById(R.id.swhWlsMoreThenWlsmaxAndStart);
@@ -36,6 +64,10 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         swhProc2 = findViewById(R.id.swhProc2);
         swhDataNull = findViewById(R.id.swhDataNull);
         swhNotConnection = findViewById(R.id.swhNotConnection);
+
+
+
+
 
         try {
             swhWlsLessThenWlsminAndStop.setChecked(Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWlsminAndStop", "false",this)));
@@ -54,10 +86,60 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
             etProc1.setText(Util.getPropertyOrSetDefaultValue("Proc1", "10",this));
             etMaxTimeStop.setText(Util.getPropertyOrSetDefaultValue("maxTimeStop", "30",this));
             etProc2.setText(Util.getPropertyOrSetDefaultValue("Proc2", "20",this));
+
+          //  getControlMod();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        // адаптер
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, aItemsMethod);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        spinner =  findViewById(R.id.spinner);
+        spinner.setAdapter(adapter);
+        // выделяем элемент
+        spinner.setSelection(controlMode);
+        itemCurrentPrev = controlMode;
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view,
+                                       int position, long id) {
+                if (itemCurrentPrev == id) return;
+                AlertDialog.Builder builder = new AlertDialog.Builder(CustomizableOptionsActivity.this);
+                builder.setTitle("Предупреждение")
+                        .setMessage("Вы действительно хотите изменить вариант управления")
+                        .setCancelable(false)
+                        .setNegativeButton("Отмена",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        spinner.setSelection(itemCurrentPrev);
+                                        dialog.cancel();
+
+                                    }
+                                })
+                        .setNeutralButton("Да",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        singin();
+
+                                        dialog.cancel();
+
+                                    }
+                                });
+
+
+                AlertDialog alert = builder.create();
+                alert.show();
+
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> arg0) {
+            }
+        });
+
     }
+
+
     @Override
     public boolean onSupportNavigateUp(){
         finish();
@@ -85,6 +167,56 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+
+    private void singin()
+    {
+
+        LayoutInflater li = LayoutInflater.from(this);
+        View dialog_signinView = li.inflate(R.layout.dialog_signin, null);
+        AlertDialog.Builder mDialogBuilder = new AlertDialog.Builder(this);
+        mDialogBuilder.setView(dialog_signinView);
+        final EditText userInput = (EditText) dialog_signinView.findViewById(R.id.inputText);
+        mDialogBuilder.setCancelable(false);
+        mDialogBuilder.setPositiveButton("OK",
+                new DialogInterface.OnClickListener() {
+
+
+                    public void onClick(DialogInterface dialog, int id) {
+                        //Вводим текст и отображаем в строке ввода на основном экране:
+                        verificationPassword = userInput.getText().toString();
+                        if (verificationPassword.equals(password)) {
+                            //   itemCurrentPrev = itemCurrent;
+                            controlMode = spinner.getSelectedItemPosition();
+                            itemCurrentPrev = controlMode;
+                            ApiQuery.Instance().NodeWatertower(rightSeekBar,leftSeekBar,controlMode,CustomizableOptionsActivity.this);
+                            dialog.cancel();
+                            //TODO Ильмир
+                        } else {
+                            Toast.makeText(getBaseContext(), "Неверный пароль", Toast.LENGTH_SHORT).show();
+                            spinner.setSelection((int) itemCurrentPrev);
+
+                        }
+                    }
+                });
+        mDialogBuilder.setNegativeButton("Отмена",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog alertDialog = mDialogBuilder.create();
+        alertDialog.show();
+
+
+    }
+
+    public void  getControlMod(){
+        Intent intent = getIntent();
+        controlMode = intent.getIntExtra("controlMode", 0);
+        rightSeekBar = intent.getFloatExtra("rightSeekBar",0);
+        leftSeekBar = intent.getFloatExtra("leftSeekBar",0);
     }
 
 }

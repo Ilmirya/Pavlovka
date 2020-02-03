@@ -59,6 +59,7 @@ public class MyService extends Service {
 
     private boolean isPingOk = false;
     private Date dtUppStop;
+    private int motorStatus = -1;
 
     private NumberFormat formatDouble = new DecimalFormat("#00.00");
     private double gHeight = -1;
@@ -465,25 +466,27 @@ public class MyService extends Service {
                 case "мотор":
                     if(arrTmp[1].equals("START")){
                         strMotor += "СТАРТ";
+                        motorStatus = 1;
                     }
                     else {
                         strMotor += "СТОП";
+                        motorStatus = 0;
                     }
                     break;
                 case "Auto mode":
-                    strUppSecondary += "Auto mode: " + arrTmp[1] + "\n";
+                    strUppSecondary += "Auto mode: " + arrTmp[1] + "; ";
                     break;
                 case "Fault":
-                    strUppSecondary += "Fault: " + arrTmp[1] + "\n";
+                    strUppSecondary += "Fault: " + arrTmp[1] + "; ";
                     break;
                 case "TOR":
-                    strUppSecondary += "TOR: " + arrTmp[1] + "\n";
+                    strUppSecondary += "TOR: " + arrTmp[1] + "; ";
                     break;
                 case "ReadySS":
-                    strUppSecondary += "ReadySS: " + arrTmp[1] + "\n";
+                    strUppSecondary += "ReadySS: " + arrTmp[1] + "; ";
                     break;
                 case "DI":
-                    strUppSecondary += "DI: " + arrTmp[1] + "\n";
+                    strUppSecondary += "DI: " + arrTmp[1] + "; ";
                     break;
             }
         }
@@ -493,13 +496,14 @@ public class MyService extends Service {
 
         double height = recordHeight.getD1d();
 
-        String strHeight = "Высота,м: " + formatDouble.format(height) +"\n";
+        String strHeight = "\n" + formatDouble.format(height) +"\n";
 
-        strHeight += "Заполн,%: " + formatDouble.format(height * 100 / 14)+"\n";
+        strHeight += "\n" + formatDouble.format(height * 100 / 14)+"\n";
 
-        strHeight += "WLS: " +  Integer.toBinaryString((int)(recordWls.getD1d()));
+        strHeight += "\n" +  Integer.toBinaryString((int)(recordWls.getD1d()));
 
-        Intent intent = new Intent().putExtra("tvMotor", strMotor)
+        Intent intent = new Intent()
+                .putExtra("tvMotor", strMotor)
                 .putExtra("myProgressBar",(int)(height*100))
                 .putExtra("tvHeightWaters", strHeight)
                 .putExtra("tvLastStartTime", strLastStartTime)
@@ -507,7 +511,9 @@ public class MyService extends Service {
                 .putExtra("tvUPPMain", strUppMain)
                 .putExtra("tvUPPSecondary", strUppSecondary)
                 .putExtra("tvLastUpdate", strLastUpdate)
-                .putExtra("tvTimeDataWls", strTimeDataWls);
+                .putExtra("tvTimeDataWls", strTimeDataWls)
+                .putExtra("height", height)
+                .putExtra("motorStatus", motorStatus);
         try {
             pendingIntent.send(MyService.this, Const.Success, intent);
         } catch (PendingIntent.CanceledException e) {
