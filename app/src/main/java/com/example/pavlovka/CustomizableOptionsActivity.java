@@ -18,7 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.IOException;
 
 public class CustomizableOptionsActivity extends AppCompatActivity {
-    private EditText etWLSmin2, etWLSmax2, etProc1, etMaxTimeStop, etProc2, userInput;
+    private EditText etWLSmin2, etWLSmax2, etProc1, etMaxTimeStop, etProc2;
     private Switch swhAutoQueryByDiscrepancy, swhWlsLessThenWlsminAndStop, swhWlsMoreThenWlsmaxAndStart,
             swhWlsLessThenWLsmin2AndStart, swhWlsMoreThenWlsmax2AndStart, swhProc1, swhMaxTimeStop, swhProc2,swhDataNull,swhNotConnection;
     private String[] aItemsMethod = {"Только контроллер", "Сервер и контроллер", "Только сервер"};
@@ -26,7 +26,7 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
     private String password = "111";
     private String verificationPassword;
 
-    private int controlMode ;
+    private int controlMode = -1;
     private float rightSeekBar;
     private float leftSeekBar;
     private int itemCurrentPrev;
@@ -50,10 +50,8 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         etMaxTimeStop = findViewById(R.id.etMaxTimeStop);
         etProc2 = findViewById(R.id.etProc2);
 
-
         swhAutoQueryByDiscrepancy = findViewById(R.id.swhAutoQueryByDiscrepancy);
         getControlMod();
-
 
         swhWlsLessThenWlsminAndStop = findViewById(R.id.swhWlsLessThenWLsminAndStop);
         swhWlsMoreThenWlsmaxAndStart = findViewById(R.id.swhWlsMoreThenWlsmaxAndStart);
@@ -64,10 +62,6 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         swhProc2 = findViewById(R.id.swhProc2);
         swhDataNull = findViewById(R.id.swhDataNull);
         swhNotConnection = findViewById(R.id.swhNotConnection);
-
-
-
-
 
         try {
             swhWlsLessThenWlsminAndStop.setChecked(Boolean.parseBoolean(Util.getPropertyOrSetDefaultValue("isWlsLessThenWlsminAndStop", "false",this)));
@@ -142,6 +136,7 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp(){
+        setControlMod();
         finish();
         return true;
     }
@@ -187,10 +182,10 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
                         //Вводим текст и отображаем в строке ввода на основном экране:
                         verificationPassword = userInput.getText().toString();
                         if (verificationPassword.equals(password)) {
-                            //   itemCurrentPrev = itemCurrent;
                             controlMode = spinner.getSelectedItemPosition();
                             itemCurrentPrev = controlMode;
                             ApiQuery.Instance().NodeWatertower(rightSeekBar,leftSeekBar,controlMode,CustomizableOptionsActivity.this);
+                            setControlMod();
                             dialog.cancel();
                             //TODO Ильмир
                         } else {
@@ -217,6 +212,13 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         controlMode = intent.getIntExtra("controlMode", 0);
         rightSeekBar = intent.getFloatExtra("rightSeekBar",0);
         leftSeekBar = intent.getFloatExtra("leftSeekBar",0);
+    }
+
+    public void  setControlMod(){
+        Intent answerIntent = new Intent();
+        answerIntent.putExtra("controlMode", controlMode);
+        setResult(Const.CustomOptions, answerIntent);
+
     }
 
 }

@@ -327,6 +327,7 @@ public class MyService extends Service {
 
         ArrayList<RecordsFromQueryDB> recordsLastStartTime = Helper.GetRecordsByType(records, "lastStartTime");
         ArrayList<RecordsFromQueryDB> recordsLastStopTime = Helper.GetRecordsByType(records, "lastStopTime");
+
         DateFormat formatter = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
         Date dtKey = new Date();
         for(RecordsFromQueryDB rec : recordsLastStartTime){
@@ -358,6 +359,7 @@ public class MyService extends Service {
                 }
             }
         }
+
         sendInActive(records);
 
         String[] arrUpp = recordUpp.getS2().split("; ");

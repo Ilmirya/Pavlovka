@@ -4,12 +4,17 @@ import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -57,6 +62,25 @@ public class MainActivity extends AppCompatActivity {
     private float interval = 1;
     Timer timer = new Timer();
 
+    private ImageView drawingImageView;
+    Bitmap bitmap;
+    Canvas canvas;
+    Paint paint = new Paint();
+    Paint paintl = new Paint();
+
+    float xPoint = 0;
+    float yPoint;
+    int imageViewHeight = 100;
+    int imageViewWidht = 1000;
+    final int maxPoint = 100;  //125
+    final int middlePoint = 50; //50
+    float  y[] = new float[maxPoint+5];
+    int strokeWidth = 8;
+    int indexXY = 0;
+    int w;
+    int wR;
+
+
     Handler handler = new Handler();
     public  MyService myService;
     public ProgressBar myProgressBar;
@@ -82,6 +106,24 @@ public class MainActivity extends AppCompatActivity {
         rangeSeekBar.getRightSeekBar().setIndicatorTextDecimalFormat("0.0");
 
 
+        drawingImageView = findViewById(R.id.drawingImageView);
+        w = getWindowManager().getDefaultDisplay().getWidth();
+        wR = w - 800;
+
+        bitmap = Bitmap.createBitmap(w, 100, Bitmap.Config.ARGB_8888);
+
+
+        canvas = new Canvas(bitmap);
+        drawingImageView.setImageBitmap(bitmap);
+        canvas.drawColor(Color.WHITE);
+        paint.setColor(Color.GRAY);
+        paint.setStrokeWidth(2);
+        paint.setTextSize(35);
+        paint.setStyle(Paint.Style.STROKE);
+        canvas.drawRect(0,0, w-wR, 100, paint);
+        paintl.setColor(Color.WHITE);
+          //  canvas.drawLine(0, 50, 1000, 50, paint);
+
 
 
         String login = "", password = "";
@@ -103,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
             }
             FunctionAtStart();
             waterTower();
+
         }
 
         rangeSeekBar.setOnRangeChangedListener(new OnRangeChangedListener() {
@@ -211,6 +254,7 @@ public class MainActivity extends AppCompatActivity {
         });
         textHight.setText(Const.strHight);
     }
+
     private void FunctionAtStart(){
         myService = new MyService();
         PendingIntent pendingIntent = createPendingResult(1, new Intent(),0  );
@@ -228,6 +272,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
@@ -243,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
                 .putExtra("rightSeekBar", rightSeekBar)
                 .putExtra("leftSeekBar", leftSeekBar);
 
-                startActivity(intentCustomizableOptionsActivity);
+                startActivityForResult(intentCustomizableOptionsActivity, Const.CustomOptions);
                 return true;
             case R.id.LogsActivity:
                 Intent intentLogsActivity = new Intent(this, LogsActivity.class);
@@ -330,9 +375,13 @@ public class MainActivity extends AppCompatActivity {
             tvTimeDataWls.setText(data.getStringExtra("tvTimeDataWls"));
             height = data.getDoubleExtra("height",0);
             motorStatus = data.getIntExtra("motorStatus",-1);
+            drawHight();
         }
         else if(resultCode == Const.Session){
             FunctionAtStart();
+        }
+        else if(resultCode == Const.CustomOptions){
+            controlMode = data.getIntExtra("controlMode",-1);
         }
         else if(resultCode == Const.Exit){
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
@@ -565,6 +614,7 @@ public class MainActivity extends AppCompatActivity {
 
        double height = recordsHeight.getD1d();
 
+
         String strHeight = "\n" + formatDouble.format(height)+"\n";
 
         double percent = height*100/14;
@@ -625,6 +675,69 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    public void  getControlMod(){
+        Intent intent = getIntent();
+        controlMode = intent.getIntExtra("controlMode", -2);
+    }
+
+    public void drawHight(){
+        y[indexXY] = (float) height;
+        float minH = leftSeekBar;
+        float maxH = rightSeekBar;
+        //imageViewWidht = 1000;
+
+        float kH = (maxH - minH)/imageViewHeight;
+        yPoint = imageViewHeight - (float) ((height-minH)/kH);
+        //canvas.drawPoint(xPoint, yPoint, paint);
+        if (indexXY == 0) {indexXY++; return;}
+        if (indexXY < maxPoint) {
+            if (y[indexXY]>= y[indexXY-1]) paint.setColor(Color.BLUE);
+            else paint.setColor(Color.RED);
+
+            drawHeightPoint(kH, minH, (indexXY - 1) * strokeWidth, y[indexXY - 1],indexXY * strokeWidth, y[indexXY]);
+        }
+        else
+        {
+            canvas.drawColor(Color.WHITE);
+            indexXY = middlePoint;int j=0;
+            j=1;
+
+            for (int i = maxPoint-middlePoint; i < maxPoint; i++){
+                drawHeightPoint(kH, minH, (j - 1) * strokeWidth, y[i - 1],j * strokeWidth, y[i]);
+                j++;
+            }
+        }
+        indexXY++;
+    }
+
+    public void drawHeightPoint(float kH, float minH, float startX, double startH,  float stopX, double stopH){
+        float startY = imageViewHeight - (float) ((startH-minH)/kH);
+        float stopY = imageViewHeight - (float) ((stopH-minH)/kH);
+
+       // yPoint = imageViewHeight - (float) ((height-minH)/kH);
+      //  canvas.drawPoint(xPoint, yPoint, paint);
+        canvas.drawLine(startX, startY, stopX, stopY, paint);
+        String timeS = "!!!";
+
+        double deltaH = (y[indexXY]- y[indexXY-1]);
+        double timeD=0;
+
+        if (deltaH > 0 )
+        {
+            timeD = (rightSeekBar - height)/deltaH*5;
+            timeS = ((int) (timeD/60) + "h " + (int) (timeD%60) + "m");
+        }
+        else
+        if (deltaH < 0 )
+        {
+            timeD = (leftSeekBar - height)/deltaH*5;
+            timeS = ((int) (timeD/60) + "h " + (int) (timeD%60) + "m");
+        }
+
+        canvas.drawRect(w - wR,0, w, 100, paintl);
+        canvas.drawText(timeS, w - wR+40, 50, paint);
+
+    }
 /*
     public String phone = "89174242238";
     public String message = "0000;RESET";

@@ -14,6 +14,7 @@ public class Const {
     public final static Integer Session = 2;
     public final static Integer ClosedService = 3;
     public final static Integer Exit = 4;
+    public final static Integer CustomOptions = 5;
 
     public final static Integer ActivDestroy = 77;
     public final static Integer ActivCreate = 2;

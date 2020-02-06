@@ -3,17 +3,12 @@ package com.example.pavlovka;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.view.View;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -22,6 +17,8 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Properties;
 public class Util {
+    public static int listKeysSize = 50;
+
     public static String getProperty(String key, Context context) throws IOException {
         return getProperties(context,"config").getProperty(key);
     }
@@ -61,7 +58,7 @@ public class Util {
             e.printStackTrace();
             new File(context.getFilesDir(), fileName + ".properties");
         }
-        if(listKeys.size() < 50){
+        if(listKeys.size() < listKeysSize){
             properties.setProperty(key,value);
         }
         else{
