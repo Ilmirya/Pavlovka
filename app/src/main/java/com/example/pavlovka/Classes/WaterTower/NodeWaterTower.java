@@ -1,4 +1,4 @@
-package com.example.pavlovka.Classes;
+package com.example.pavlovka.Classes.WaterTower;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

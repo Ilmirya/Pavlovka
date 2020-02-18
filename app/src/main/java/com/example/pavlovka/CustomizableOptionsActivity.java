@@ -3,6 +3,7 @@ package com.example.pavlovka;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -95,9 +97,12 @@ public class CustomizableOptionsActivity extends AppCompatActivity {
         spinner.setSelection(controlMode);
         itemCurrentPrev = controlMode;
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
             @Override
             public void onItemSelected(AdapterView<?> parent, View view,
                                        int position, long id) {
+                ((TextView) parent.getChildAt(0)).setTextColor(Color.GRAY);
+                ((TextView) parent.getChildAt(0)).setTextSize(14);
                 if (itemCurrentPrev == id) return;
                 AlertDialog.Builder builder = new AlertDialog.Builder(CustomizableOptionsActivity.this);
                 builder.setTitle("Предупреждение")

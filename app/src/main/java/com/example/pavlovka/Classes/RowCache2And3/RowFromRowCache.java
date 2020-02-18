@@ -33,6 +33,9 @@ public class RowFromRowCache {
     @Expose
     public String event;
 
+
+
+
     public String getId() {
         return id;
     }
@@ -60,6 +63,5 @@ public class RowFromRowCache {
     public String getEvent() {
         return event;
     }
-
 
 }

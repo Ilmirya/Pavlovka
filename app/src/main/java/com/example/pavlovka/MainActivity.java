@@ -20,8 +20,9 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.pavlovka.Classes.ExportWaterTower;
+import com.example.pavlovka.Classes.EditGetRow.RecordFromEditGetRow;
 import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
+import com.example.pavlovka.Classes.WaterTower.ExportWaterTower;
 import com.google.gson.Gson;
 import com.jaygoo.widget.OnRangeChangedListener;
 import com.jaygoo.widget.RangeSeekBar;
@@ -37,7 +38,10 @@ import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executor;
@@ -68,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
     Paint paint = new Paint();
     Paint paintl = new Paint();
 
+    public Properties properties;
+    public Enumeration<String> enumerationStr;
+
     float xPoint = 0;
     float yPoint;
     int imageViewHeight = 100;
@@ -75,10 +82,16 @@ public class MainActivity extends AppCompatActivity {
     final int maxPoint = 100;  //125
     final int middlePoint = 50; //50
     float  y[] = new float[maxPoint+5];
+
+    ArrayList<Float> arrayHeight = new ArrayList<>();
+    ArrayList<Date> arrayHeightDate = new ArrayList<>();
+
     int strokeWidth = 8;
     int indexXY = 0;
     int w;
     int wR;
+
+
 
 
     Handler handler = new Handler();
@@ -100,28 +113,15 @@ public class MainActivity extends AppCompatActivity {
         tvUpp = findViewById(R.id.tvUpp);
         tvTimeDataWls = findViewById(R.id.tvTimeDataWls);
         tvMonitoringWls = findViewById(R.id.tvMonitoringWls);
+        drawingImageView = findViewById(R.id.drawingImageView);
 
         rangeSeekBar = findViewById(R.id.sb_vertical_8);
         rangeSeekBar.getLeftSeekBar().setIndicatorTextDecimalFormat("0.0");
         rangeSeekBar.getRightSeekBar().setIndicatorTextDecimalFormat("0.0");
 
 
-        drawingImageView = findViewById(R.id.drawingImageView);
-        w = getWindowManager().getDefaultDisplay().getWidth();
-        wR = w - 800;
-
-        bitmap = Bitmap.createBitmap(w, 100, Bitmap.Config.ARGB_8888);
 
 
-        canvas = new Canvas(bitmap);
-        drawingImageView.setImageBitmap(bitmap);
-        canvas.drawColor(Color.WHITE);
-        paint.setColor(Color.GRAY);
-        paint.setStrokeWidth(2);
-        paint.setTextSize(35);
-        paint.setStyle(Paint.Style.STROKE);
-        canvas.drawRect(0,0, w-wR, 100, paint);
-        paintl.setColor(Color.WHITE);
           //  canvas.drawLine(0, 50, 1000, 50, paint);
 
 
@@ -144,9 +144,23 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             FunctionAtStart();
+
+            w = getWindowManager().getDefaultDisplay().getWidth();
+            wR = (int) (w*0.20);
+            bitmap = Bitmap.createBitmap(w, 100, Bitmap.Config.ARGB_8888);
+            canvas = new Canvas(bitmap);
+            drawingImageView.setImageBitmap(bitmap);
+
             waterTower();
 
+
         }
+        //waterTower1();
+       // onDraw();
+       // RecordFromEditGetRow editGetRow = ApiQuery.Instance().EditGetRow(MainActivity.this);
+      //  String idWls = editGetRow.getIdWls();
+     //   RecordsFromQueryDB[] hh = ApiQuery.Instance().QueryFromDatabaseWls(MainActivity.this, idWls );
+
 
         rangeSeekBar.setOnRangeChangedListener(new OnRangeChangedListener() {
             @Override
@@ -650,14 +664,22 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         ExportWaterTower exportWaterTower = ApiQuery.Instance().ExportWatertower(MainActivity.this);
-                        rightSeekBar = Float.parseFloat(exportWaterTower.getMax());
-                        leftSeekBar = Float.parseFloat(exportWaterTower.getMin());
-                        rightSeekBarPrev = rightSeekBar;
-                        leftSeekBarPrev = leftSeekBar;
-                        SeekBarMin = Float.parseFloat(exportWaterTower.getCriticalMin());
-                        SeekBarMax = Float.parseFloat(exportWaterTower.getCriticalMax());
-                        interval = Float.parseFloat(exportWaterTower.getInterval());
-                        controlMode = (int) Float.parseFloat(exportWaterTower.getControlMode());
+
+                            rightSeekBar = Float.parseFloat(exportWaterTower.getMax());
+                            leftSeekBar = Float.parseFloat(exportWaterTower.getMin());
+                            rightSeekBarPrev = rightSeekBar;
+                            leftSeekBarPrev = leftSeekBar;
+                            SeekBarMin = Float.parseFloat(exportWaterTower.getCriticalMin());
+                            SeekBarMax = Float.parseFloat(exportWaterTower.getCriticalMax());
+                            interval = Float.parseFloat(exportWaterTower.getInterval());
+                            controlMode = (int) Float.parseFloat(exportWaterTower.getControlMode());
+
+
+                        if (arrayHeight.size()<40){
+
+                            waterTower1();
+                            onDraw();
+                        }
                         try{
                             handler.post(new Runnable() {
                                 @Override
@@ -668,11 +690,31 @@ public class MainActivity extends AppCompatActivity {
                         }catch (Exception ex){
                             ex.printStackTrace();
                         }
-
+                     //   RecordFromEditGetRow editGetRow = ApiQuery.Instance().EditGetRow(MainActivity.this);
                     }
                 },0, 1000 * 60* 1);
             }
         }).start();
+
+    }
+    public void waterTower1(){
+      //  new Thread(new Runnable() {
+         //   @Override
+          //  public void run() {
+                        RecordFromEditGetRow editGetRow = ApiQuery.Instance().EditGetRow(MainActivity.this);
+                        String idWls = editGetRow.getIdWls();
+                        RecordsFromQueryDB[] arrayRecord = ApiQuery.Instance().QueryFromDatabaseWls(MainActivity.this, idWls );
+                        for (int i = 0; i< arrayRecord.length; i++)
+                        {
+                            if(arrayRecord[i].getS1().equals("высота")){
+                               arrayHeight.add(Float.valueOf(arrayRecord[i].getD1s()));
+                               arrayHeightDate.add(arrayRecord[i].getDateDt());
+
+                            }
+                      }
+          //  }
+      //  }).start();
+
     }
 
     public void  getControlMod(){
@@ -680,21 +722,49 @@ public class MainActivity extends AppCompatActivity {
         controlMode = intent.getIntExtra("controlMode", -2);
     }
 
+
+    public void onDraw() {
+
+        canvas.drawColor(Color.WHITE);
+        paint.setColor(Color.GRAY);
+        paint.setStrokeWidth(2);
+        paint.setTextSize(35);
+        paint.setStyle(Paint.Style.STROKE);
+        canvas.drawRect(0,0, w-wR, 100, paint);
+        paintl.setColor(Color.WHITE);
+        float minH = leftSeekBar;
+        float maxH = rightSeekBar;
+        float kH = (maxH - minH)/imageViewHeight;
+
+        for (int i = 0; i< arrayHeight.size()-0; i++){
+            if (i>0) {
+                float stopH = arrayHeight.get(i);
+                float startH = arrayHeight.get(i-1);
+                indexXY = i;
+                drawHeightPoint(kH, minH, (indexXY - 1) * strokeWidth, startH,indexXY * strokeWidth, stopH);
+                y[indexXY]=stopH;
+            }
+
+        }
+        indexXY++;
+
+
+    }
+
     public void drawHight(){
         y[indexXY] = (float) height;
         float minH = leftSeekBar;
         float maxH = rightSeekBar;
-        //imageViewWidht = 1000;
 
         float kH = (maxH - minH)/imageViewHeight;
-        yPoint = imageViewHeight - (float) ((height-minH)/kH);
-        //canvas.drawPoint(xPoint, yPoint, paint);
+
         if (indexXY == 0) {indexXY++; return;}
         if (indexXY < maxPoint) {
             if (y[indexXY]>= y[indexXY-1]) paint.setColor(Color.BLUE);
             else paint.setColor(Color.RED);
 
             drawHeightPoint(kH, minH, (indexXY - 1) * strokeWidth, y[indexXY - 1],indexXY * strokeWidth, y[indexXY]);
+
         }
         else
         {

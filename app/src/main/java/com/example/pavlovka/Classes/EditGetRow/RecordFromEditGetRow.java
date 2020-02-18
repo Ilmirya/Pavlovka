@@ -1,18 +1,10 @@
-package com.example.pavlovka.Classes;
+package com.example.pavlovka.Classes.EditGetRow;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class ExportWaterTower {
-    // ---------------------Set
-    @SerializedName("objectId")
-    @Expose
-    public String objectId;
+public class RecordFromEditGetRow {
 
-    public void setWaterTower(String objectId) {
-        this.objectId = objectId;
-    }
-    // ---------------------Get
     @SerializedName("max")
     @Expose
     public String max;
@@ -37,6 +29,12 @@ public class ExportWaterTower {
     @Expose
     public String controlMode ;
 
+    @SerializedName("idWls")
+    @Expose
+    public String idWls ;
+
+
+
     public String getMax() {
         return max;
     }
@@ -60,5 +58,7 @@ public class ExportWaterTower {
         return controlMode;
     }
 
+    public String getIdWls() {
+        return idWls;
+    }
 }
-

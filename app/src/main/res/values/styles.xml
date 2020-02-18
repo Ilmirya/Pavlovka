@@ -36,4 +36,5 @@
         <!-- активное состояние (30% прозрачности для фона) -->
         <item name="colorControlActivated">@color/colorMainBlue</item>
     </style>
+
 </resources>

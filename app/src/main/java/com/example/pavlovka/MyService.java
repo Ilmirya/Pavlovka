@@ -18,6 +18,7 @@ import androidx.core.app.NotificationCompat;
 import com.example.pavlovka.Classes.BodyForSignalR.ListUpdateBody;
 import com.example.pavlovka.Classes.Message;
 import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
+import com.example.pavlovka.Classes.RecordFromFoldersGet;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
@@ -149,6 +150,7 @@ public class MyService extends Service {
                         isPingOk = false;
                         countVisit = 0;
                         gIsNotConnected = false;
+                        RecordFromFoldersGet foldersGet = ApiQuery.Instance().FoldersGet(MyService.this);
                         MainFunction();
                     }
                 }
@@ -327,6 +329,8 @@ public class MyService extends Service {
 
         ArrayList<RecordsFromQueryDB> recordsLastStartTime = Helper.GetRecordsByType(records, "lastStartTime");
         ArrayList<RecordsFromQueryDB> recordsLastStopTime = Helper.GetRecordsByType(records, "lastStopTime");
+        ArrayList<RecordsFromQueryDB> recordsOnDraw = Helper.GetRecordsByType(records, "высота");
+
 
         DateFormat formatter = new SimpleDateFormat("dd.MM.yy HH:mm:ss");
         Date dtKey = new Date();
@@ -354,6 +358,20 @@ public class MyService extends Service {
             if(dtKey.getYear() >= new Date().getYear() - 1){
                 try {
                     Util.setProperty(rec.getS2(), "stop", MyService.this, "startStopTime");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        for(RecordsFromQueryDB rec : recordsOnDraw){
+            try {
+                dtKey = formatter.parse(rec.getDateStr());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            if(dtKey.getYear() >= new Date().getYear() - 1){
+                try {
+                    Util.setProperty(rec.getDateStr(), String.valueOf(recordHeight.getD1d()), MyService.this, "heightOnDraw");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

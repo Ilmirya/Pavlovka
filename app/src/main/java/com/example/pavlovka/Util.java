@@ -46,6 +46,8 @@ public class Util {
     public static void setProperty(String key, String value, Context context, String fileName) throws IOException {
         if(value == null) return;
         Properties properties = new Properties();
+        if (fileName == "heightOnDraw") listKeysSize = 100;
+        else listKeysSize = 50;
         ArrayList<String> listKeys = new ArrayList<>();
         try {
             Properties properties1 = getProperties(context, fileName);

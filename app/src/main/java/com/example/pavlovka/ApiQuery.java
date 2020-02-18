@@ -3,20 +3,23 @@ package com.example.pavlovka;
 import android.content.Context;
 
 import com.example.pavlovka.Classes.Auth.AuthBySession.AuthBySession;
+import com.example.pavlovka.Classes.EditGetRow.EditGetRow;
+import com.example.pavlovka.Classes.EditGetRow.RecordFromEditGetRow;
+import com.example.pavlovka.Classes.FoldersGet;
 import com.example.pavlovka.Classes.GetSessionidd.BodyFromSession;
 import com.example.pavlovka.Classes.GetSessionidd.SessionJson;
 import com.example.pavlovka.Classes.GetSessionidd.UserFromBodySession;
-import com.example.pavlovka.Classes.ExportWaterTower;
 import com.example.pavlovka.Classes.Message;
-import com.example.pavlovka.Classes.NodeWaterTower;
 import com.example.pavlovka.Classes.Poll;
 import com.example.pavlovka.Classes.QueryFromDatabase.QueryDB;
 import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
+import com.example.pavlovka.Classes.RecordFromFoldersGet;
 import com.example.pavlovka.Classes.SignalBind;
+import com.example.pavlovka.Classes.WaterTower.ExportWaterTower;
+import com.example.pavlovka.Classes.WaterTower.NodeWaterTower;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.lang.String;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -33,6 +36,7 @@ public class ApiQuery {
     }
     public Gson gson = new Gson();
     public String gSessionId = "";
+    public String gFolderId = "";
     ArrayList<String> logsList = new ArrayList<>();
     boolean isAdmin = false;
     public String AuthByLogin(Context context, String login, String password){
@@ -176,6 +180,13 @@ public class ApiQuery {
         return false;
     }
 
+    public RecordFromFoldersGet FoldersGet (Context context){ // folderId папок
+        Message message = MessageExecute("folders-get",null, context);
+        String json = gson.toJson(message.getBody());
+        FoldersGet foldersGet = gson.fromJson(json, FoldersGet.class);
+        return foldersGet.getRoot();
+    }
+
     public RecordsFromQueryDB[] QueryFromDatabase(Context context){
         Calendar calStart = Calendar.getInstance();
         calStart.add(Calendar.MINUTE,-25);//-25
@@ -199,6 +210,29 @@ public class ApiQuery {
         return null;
     }
 
+    public RecordsFromQueryDB[] QueryFromDatabaseWls(Context context, String idWls){
+        Calendar calStart = Calendar.getInstance();
+        calStart.add(Calendar.MINUTE,-300);//-25
+        Date dtStart = calStart.getTime();
+        Calendar calendarNow = Calendar.getInstance();
+        calendarNow.add(Calendar.MINUTE, 20);
+        Date dtNow = calendarNow.getTime();
+        QueryDB queryDB = new QueryDB();
+        queryDB.setQueryDB(new String[]{idWls}, dtStart, dtNow,"Current");
+        try {
+            Message message = MessageExecute("records-get1", queryDB, context);
+            if(message == null || message.getBody() == null) return null;
+            String json1 = gson.toJson(message.getBody());
+            QueryDB queryDB1 = gson.fromJson(json1, QueryDB.class) ;
+            return queryDB1.getRecords();
+        } catch (Exception e) {
+            if(logsReplay(e.getMessage())){
+                Util.logsException(e.getMessage(),context);
+            }
+        }
+        return null;
+    }
+
     public ExportWaterTower ExportWatertower(Context context){
         ExportWaterTower exportWaterTower = new ExportWaterTower();
         exportWaterTower.setWaterTower(Const.objectIdUpp);
@@ -206,7 +240,6 @@ public class ApiQuery {
         String json1 = gson.toJson(message.getBody());
         ExportWaterTower exportWaterTower1 = gson.fromJson(json1, ExportWaterTower.class);
         return exportWaterTower1;
-
     }
 
     public void NodeWatertower(final Float max, final Float min, final int controlMode, final Context context){
@@ -221,4 +254,14 @@ public class ApiQuery {
         }).start();
 
     }
+    public RecordFromEditGetRow EditGetRow(Context context){
+        EditGetRow editGetRow = new EditGetRow();
+        editGetRow.setEditGetRow(false,Const.objectIdUpp );
+        Message message = MessageExecute( "edit-get-row", editGetRow, context);
+        String json1 = gson.toJson(message.getBody());
+        EditGetRow editGetRow1 = gson.fromJson(json1, EditGetRow.class);
+        return editGetRow1.getTube();
+    }
+
+
 }

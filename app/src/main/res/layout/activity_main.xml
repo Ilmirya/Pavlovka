@@ -80,7 +80,7 @@
                                     android:layout_marginLeft="10dp"
                                     android:drawableEnd="@color/colorPrimary"
                                     android:gravity="left"
-                                    android:textColor="@color/colorGray800"
+                                    android:textColor="#632182"
                                     android:textSize="15sp"
                                     android:textStyle="bold" />
                             </LinearLayout>
@@ -97,7 +97,7 @@
                                     android:layout_height="match_parent"
                                     android:drawableEnd="@color/colorPrimary"
                                     android:gravity="left"
-                                    android:textColor="@color/colorGray800"
+                                    android:textColor="#632182"
                                     android:textSize="15sp"
                                     android:textStyle="bold" />
                             </LinearLayout>
@@ -113,13 +113,12 @@
                                 android:id="@+id/tvTimeDataWls"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_gravity="center_horizontal"
-                                android:layout_marginBottom="5dp"
-                                android:layout_weight="1"
-                                android:drawableEnd="@color/colorPrimary"
+                                android:layout_gravity="left"
+                                android:layout_marginLeft="10dp"                                android:layout_weight="1"
+                                android:drawableEnd="#632182"
                                 android:rowCount="1"
-                                android:textAlignment="center"
-                                android:textColor="@color/colorGray800"
+
+                                android:textColor="#632182"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
 
@@ -135,14 +134,14 @@
                                 android:id="@+id/tvMonitoringWls"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_gravity="center_horizontal"
+                                android:layout_gravity="left"
                                 android:layout_weight="1"
                                 android:drawableEnd="@color/colorPrimary"
                                 android:rowCount="1"
-                                android:textAlignment="center"
-                                android:textColor="@color/colorGray800"
+                                android:textColor="#632182"
                                 android:textSize="12sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:layout_marginLeft="10dp"/>
                         </LinearLayout>
                     </LinearLayout>
                     <LinearLayout
@@ -192,7 +191,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:background="@android:color/white"
-                    android:orientation="vertical"
+                    android:orientation="horizontal"
                     android:layout_weight="2"
                     android:layout_marginTop="5dp"
                     >
@@ -243,7 +242,7 @@
                     android:rowCount="1"
                     android:text="2-ой подъем"
                     android:textAlignment="center"
-                    android:textColor="@color/colorGray800"
+                    android:textColor="#632182"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -262,7 +261,7 @@
                         android:layout_weight="2"
                         android:drawableEnd="@color/colorPrimary"
                         android:textAlignment="center"
-                        android:textColor="@color/colorGray800"
+                        android:textColor="#632182"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -274,7 +273,7 @@
                         android:layout_weight="3"
                         android:drawableEnd="@color/colorPrimary"
                         android:textAlignment="center"
-                        android:textColor="@color/colorGray800"
+                        android:textColor="#632182"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -286,7 +285,7 @@
                         android:layout_marginTop="1dp"
                         android:layout_weight="1"
                         android:drawableEnd="@color/colorPrimary"
-                        android:textColor="@color/colorGray800"
+                        android:textColor="#632182"
                         android:textSize="10sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -300,7 +299,7 @@
                     android:drawableEnd="@color/colorPrimary"
                     android:rowCount="1"
                     android:textAlignment="center"
-                    android:textColor="@color/colorGray800"
+                    android:textColor="#632182"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -314,7 +313,7 @@
                     android:drawableEnd="@color/colorPrimary"
                     android:rowCount="1"
                     android:textAlignment="center"
-                    android:textColor="@color/colorGray800"
+                    android:textColor="#632182"
                     android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -330,7 +329,7 @@
         android:drawableEnd="@color/colorPrimary"
         android:textColor="#632182"
         android:textSize="10sp"
-        android:layout_marginRight="2dp"
+        android:layout_marginRight="10dp"
         android:textStyle="bold"
         android:gravity="right"
         android:layout_weight="1"/>
