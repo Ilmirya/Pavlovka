@@ -18,7 +18,6 @@ import androidx.core.app.NotificationCompat;
 import com.example.pavlovka.Classes.BodyForSignalR.ListUpdateBody;
 import com.example.pavlovka.Classes.Message;
 import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
-import com.example.pavlovka.Classes.RecordFromFoldersGet;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
@@ -150,7 +149,6 @@ public class MyService extends Service {
                         isPingOk = false;
                         countVisit = 0;
                         gIsNotConnected = false;
-                        RecordFromFoldersGet foldersGet = ApiQuery.Instance().FoldersGet(MyService.this);
                         MainFunction();
                     }
                 }

@@ -1,4 +1,4 @@
-package com.example.pavlovka.Classes;
+package com.example.pavlovka.Classes.FoldersGet;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -8,11 +8,11 @@ public class FoldersGet {
 
     //---------------------------Get
 
-    @SerializedName("tube")
+    @SerializedName("root")
     @Expose
-    public RecordFromFoldersGet root;
+    public Folder root;
 
-    public RecordFromFoldersGet getRoot() {
+    public Folder getRoot() {
         return root;
     }
 }

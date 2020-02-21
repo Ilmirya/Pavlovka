@@ -5,7 +5,10 @@ import android.content.Context;
 import com.example.pavlovka.Classes.Auth.AuthBySession.AuthBySession;
 import com.example.pavlovka.Classes.EditGetRow.EditGetRow;
 import com.example.pavlovka.Classes.EditGetRow.RecordFromEditGetRow;
-import com.example.pavlovka.Classes.FoldersGet;
+import com.example.pavlovka.Classes.FoldersGet.Children;
+import com.example.pavlovka.Classes.FoldersGet.Data;
+import com.example.pavlovka.Classes.FoldersGet.Folder;
+import com.example.pavlovka.Classes.FoldersGet.FoldersGet;
 import com.example.pavlovka.Classes.GetSessionidd.BodyFromSession;
 import com.example.pavlovka.Classes.GetSessionidd.SessionJson;
 import com.example.pavlovka.Classes.GetSessionidd.UserFromBodySession;
@@ -13,7 +16,8 @@ import com.example.pavlovka.Classes.Message;
 import com.example.pavlovka.Classes.Poll;
 import com.example.pavlovka.Classes.QueryFromDatabase.QueryDB;
 import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
-import com.example.pavlovka.Classes.RecordFromFoldersGet;
+import com.example.pavlovka.Classes.RowCache2And3.RowCache;
+import com.example.pavlovka.Classes.RowCache2And3.RowFromRowCache;
 import com.example.pavlovka.Classes.SignalBind;
 import com.example.pavlovka.Classes.WaterTower.ExportWaterTower;
 import com.example.pavlovka.Classes.WaterTower.NodeWaterTower;
@@ -37,6 +41,7 @@ public class ApiQuery {
     public Gson gson = new Gson();
     public String gSessionId = "";
     public String gFolderId = "";
+    public String goObjectIdUpp = "";
     ArrayList<String> logsList = new ArrayList<>();
     boolean isAdmin = false;
     public String AuthByLogin(Context context, String login, String password){
@@ -66,6 +71,7 @@ public class ApiQuery {
             gSessionId = post.getSessionId();
             Util.setPropertyConfig("sessionId", gSessionId, context);
             Util.setPropertyConfig("isAdmin", Boolean.toString(isAdmin), context);
+            RowCache(context);
             return post.getSessionId();
         } catch (IOException e) {
             if(logsReplay(e.getMessage())){
@@ -180,11 +186,44 @@ public class ApiQuery {
         return false;
     }
 
-    public RecordFromFoldersGet FoldersGet (Context context){ // folderId папок
-        Message message = MessageExecute("folders-get",null, context);
-        String json = gson.toJson(message.getBody());
-        FoldersGet foldersGet = gson.fromJson(json, FoldersGet.class);
-        return foldersGet.getRoot();
+    public String FoldersGet (Context context){ // folderId папки
+
+        try {
+            Message message = MessageExecute("folders-get",null, context);
+            String json1 = gson.toJson(message.getBody());
+            FoldersGet foldersGet = gson.fromJson(json1, FoldersGet.class);
+            Folder f = foldersGet.getRoot();
+            Children[] ch = f.getChildren();
+            for (int i = 0; i < ch.length; i++){
+                Data d = ch[i].getData();
+                String name = d.getName();
+                if (name.equals("Павловка"))gFolderId = d.getId();
+            }
+
+
+
+        } catch (Exception e) {
+            if(logsReplay(e.getMessage())){
+                Util.logsException(e.getMessage(),context);
+            }
+        }
+        return null;
+    }
+
+    public String RowCache(Context context){
+        FoldersGet(context);
+        RowCache rowCache = new RowCache();
+        rowCache.setFilter(gFolderId, null, 10, 0, null);
+        Message message = MessageExecute("rows-get-2", rowCache, context);
+        String json1 = gson.toJson(message.getBody());
+        RowCache rowCache1 = gson.fromJson(json1, RowCache.class);
+        RowFromRowCache[] row = rowCache1.getRows();
+
+        for (int i = 0; i < row.length; i++) {
+        String name = row[i].getPname();
+        if (name.equals("УПП<->сервер")) goObjectIdUpp = row[i].getId();
+        }
+        return goObjectIdUpp;
     }
 
     public RecordsFromQueryDB[] QueryFromDatabase(Context context){
@@ -195,7 +234,7 @@ public class ApiQuery {
         calendarNow.add(Calendar.MINUTE, 20);
         Date dtNow = calendarNow.getTime();
         QueryDB queryDB = new QueryDB();
-        queryDB.setQueryDB(new String[]{Const.objectIdUpp}, dtStart, dtNow,"Current");
+        queryDB.setQueryDB(new String[]{goObjectIdUpp}, dtStart, dtNow,"Current");
         try {
             Message message = MessageExecute("records-get1", queryDB, context);
             if(message == null || message.getBody() == null) return null;
@@ -234,8 +273,9 @@ public class ApiQuery {
     }
 
     public ExportWaterTower ExportWatertower(Context context){
+        if (goObjectIdUpp.equals("")) RowCache(context);
         ExportWaterTower exportWaterTower = new ExportWaterTower();
-        exportWaterTower.setWaterTower(Const.objectIdUpp);
+        exportWaterTower.setWaterTower(goObjectIdUpp);
         Message message = MessageExecute( "export-watertower", exportWaterTower, context);
         String json1 = gson.toJson(message.getBody());
         ExportWaterTower exportWaterTower1 = gson.fromJson(json1, ExportWaterTower.class);
@@ -247,7 +287,7 @@ public class ApiQuery {
             @Override
             public void run() {
                 NodeWaterTower nodeWaterTower = new NodeWaterTower();
-                nodeWaterTower.setNodeWaterTower(Const.objectIdUpp, max, min, controlMode);
+                nodeWaterTower.setNodeWaterTower(goObjectIdUpp, max, min, controlMode);
                 Message message = MessageExecute( "node-watertower", nodeWaterTower, context);
                 String json1 = gson.toJson(message.getBody());
             }
@@ -256,7 +296,7 @@ public class ApiQuery {
     }
     public RecordFromEditGetRow EditGetRow(Context context){
         EditGetRow editGetRow = new EditGetRow();
-        editGetRow.setEditGetRow(false,Const.objectIdUpp );
+        editGetRow.setEditGetRow(false, goObjectIdUpp );
         Message message = MessageExecute( "edit-get-row", editGetRow, context);
         String json1 = gson.toJson(message.getBody());
         EditGetRow editGetRow1 = gson.fromJson(json1, EditGetRow.class);
