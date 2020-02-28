@@ -33,6 +33,13 @@ public class RowFromRowCache {
     @Expose
     public String event;
 
+    @SerializedName("value")
+    @Expose
+    public String value;
+
+    @SerializedName("description")
+    @Expose
+    public String description;
 
 
 
@@ -62,6 +69,14 @@ public class RowFromRowCache {
 
     public String getEvent() {
         return event;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
 }

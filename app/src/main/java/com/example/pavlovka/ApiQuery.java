@@ -210,8 +210,8 @@ public class ApiQuery {
         return null;
     }
 
-    public String RowCache(Context context){
-        FoldersGet(context);
+    public RowFromRowCache[] RowCache(Context context){
+        if (gFolderId.equals(""))FoldersGet(context);
         RowCache rowCache = new RowCache();
         rowCache.setFilter(gFolderId, null, 10, 0, null);
         Message message = MessageExecute("rows-get-2", rowCache, context);
@@ -223,7 +223,7 @@ public class ApiQuery {
         String name = row[i].getPname();
         if (name.equals("УПП<->сервер")) goObjectIdUpp = row[i].getId();
         }
-        return goObjectIdUpp;
+        return row;
     }
 
     public RecordsFromQueryDB[] QueryFromDatabase(Context context){

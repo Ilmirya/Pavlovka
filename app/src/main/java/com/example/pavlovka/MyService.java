@@ -18,6 +18,7 @@ import androidx.core.app.NotificationCompat;
 import com.example.pavlovka.Classes.BodyForSignalR.ListUpdateBody;
 import com.example.pavlovka.Classes.Message;
 import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
+import com.example.pavlovka.Classes.RowCache2And3.RowFromRowCache;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
@@ -378,6 +379,7 @@ public class MyService extends Service {
 
         sendInActive(records);
 
+
         String[] arrUpp = recordUpp.getS2().split("; ");
         boolean isMotorStart = false;
         String strMotor = "насос: ";
@@ -466,10 +468,24 @@ public class MyService extends Service {
         RecordsFromQueryDB recordLastStartTime = Helper.GetLastRecordByType(records, "lastStartTime");
         RecordsFromQueryDB recordLastStopTime = Helper.GetLastRecordByType(records, "lastStopTime");
         RecordsFromQueryDB recordMotorCurrent = Helper.GetLastRecordByType(records, "motorCurrent");
+        RowFromRowCache[] recordCache = ApiQuery.Instance().RowCache(MyService.this);
+        String cacheUpp = "";
+        double cacheHeight = 0;
+        for (int i = 0; i < recordCache.length; i++) {
+            String name = recordCache[i].getPname();
+            if (name.equals("Башня")||name.equals("Башня БИС") )  if (recordCache[i].getDescription().equals("")) cacheHeight = Double.parseDouble(recordCache[i].getValue());
+            if (name.equals("УПП<->сервер"))  cacheUpp = recordCache[i].getValue();
+        }
 
         if(recordUpp == null || recordWls == null || recordHeight == null) return;
 
         String strMotor = "насос\n", strUppSecondary = "";
+        if (cacheUpp.equals("1")) {
+            strMotor += "СТАРТ";//"ЗАПУЩЕН";
+        }
+        else {
+            strMotor += "СТОП";// "ОСТ-ЛЕН";
+        }
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String strLastUpdate = "время обновления: " + simpleDateFormat.format(recordUpp.getDateDt());
@@ -481,6 +497,7 @@ public class MyService extends Service {
         for(String uppTmp : arrUpp){
             String[] arrTmp = uppTmp.split("=");
             switch (arrTmp[0]){
+                /*
                 case "мотор":
                     if(arrTmp[1].equals("START")){
                         strMotor += "СТАРТ";
@@ -490,7 +507,7 @@ public class MyService extends Service {
                         strMotor += "СТОП";
                         motorStatus = 0;
                     }
-                    break;
+                    break;*/
                 case "Auto mode":
                     strUppSecondary += "Auto mode: " + arrTmp[1] + "; ";
                     break;
@@ -512,7 +529,7 @@ public class MyService extends Service {
         String strUppMain = recordCurrentPhaseMax != null ? ("Макс.ток фаз,A:\n" + recordCurrentPhaseMax.getD1s() + "\n") : "undefined\n";
         strUppMain += recordMotorCurrent != null ? ("% от номинала:\n" + recordMotorCurrent.getD1s()) : "undefined";
 
-        double height = recordHeight.getD1d();
+        double height = cacheHeight;
 
         String strHeight = "\n" + formatDouble.format(height) +"\n";
 

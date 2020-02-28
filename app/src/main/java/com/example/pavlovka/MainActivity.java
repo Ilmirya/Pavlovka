@@ -22,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.pavlovka.Classes.EditGetRow.RecordFromEditGetRow;
 import com.example.pavlovka.Classes.QueryFromDatabase.RecordsFromQueryDB;
+import com.example.pavlovka.Classes.RowCache2And3.RowFromRowCache;
 import com.example.pavlovka.Classes.WaterTower.ExportWaterTower;
 import com.google.gson.Gson;
 import com.jaygoo.widget.OnRangeChangedListener;
@@ -565,13 +566,24 @@ public class MainActivity extends AppCompatActivity {
             //requestSmsPermission();
             return;
         }
+        //TODO добавить в rowcache
         RecordsFromQueryDB recordsUpp = Helper.GetLastRecordByType(records,"upp");
+        //TODO поменять на rowcache
         RecordsFromQueryDB recordsWls = Helper.GetLastRecordByType(records, "wls");
         RecordsFromQueryDB recordsCurrentPhaseMax = Helper.GetLastRecordByType(records, "currentPhaseMax");
+        //TODO поменять на rowcache
         RecordsFromQueryDB recordsHeight = Helper.GetLastRecordByType(records, "высота");
         RecordsFromQueryDB recordsLastStartTime = Helper.GetLastRecordByType(records, "lastStartTime");
         RecordsFromQueryDB recordsLastStopTime = Helper.GetLastRecordByType(records, "lastStopTime");
         RecordsFromQueryDB recordsMotorCurrent = Helper.GetLastRecordByType(records, "motorCurrent");
+        RowFromRowCache[] recordCache = ApiQuery.Instance().RowCache(MainActivity.this);
+        String cacheUpp = "";
+        double cacheHeight = 0;
+        for (int i = 0; i < recordCache.length; i++) {
+            String name = recordCache[i].getPname();
+            if (name.equals("Башня")||name.equals("Башня БИС") )  if (recordCache[i].getDescription().equals("")) cacheHeight = Double.parseDouble(recordCache[i].getValue());
+            if (name.equals("УПП<->сервер"))  cacheUpp = recordCache[i].getValue();
+        }
 
         if(recordsUpp == null || recordsWls == null || recordsHeight == null){
             handler.post(new Runnable() {
@@ -584,6 +596,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String strMotor = "насос\n", strUppSecondary = "";
+        if (cacheUpp.equals("1")) {
+            strMotor += "СТАРТ";//"ЗАПУЩЕН";
+        }
+        else {
+            strMotor += "СТОП";// "ОСТ-ЛЕН";
+        }
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         final String strLastUpdate = "время обновления: " + simpleDateFormat.format(recordsUpp.getDateDt());
@@ -596,6 +614,7 @@ public class MainActivity extends AppCompatActivity {
         for(String uppTmp : arrUpp){
             String[] arrTmp = uppTmp.split("=");
             switch (arrTmp[0]){
+                /*
                 case "мотор":
                     if(arrTmp[1].equals("START")){
                         strMotor += "СТАРТ";//"ЗАПУЩЕН";
@@ -603,7 +622,7 @@ public class MainActivity extends AppCompatActivity {
                     else {
                         strMotor += "СТОП";// "ОСТ-ЛЕН";
                     }
-                    break;
+                    break;*/
                 case "Auto mode":
                     strUppSecondary += "Auto mode: " + arrTmp[1] + "; ";
                     break;
@@ -626,7 +645,7 @@ public class MainActivity extends AppCompatActivity {
         String strUppMain = recordsCurrentPhaseMax != null ? ("Макс.ток фаз,A:\n" + recordsCurrentPhaseMax.getD1s() + "\n") : ("undefined\n");
         strUppMain += recordsMotorCurrent != null ? ("% от номинала:\n" + recordsMotorCurrent.getD1s()) : "undefined";
 
-       double height = recordsHeight.getD1d();
+       double height = cacheHeight;
 
 
         String strHeight = "\n" + formatDouble.format(height)+"\n";
@@ -724,7 +743,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void onDraw() {
-
         canvas.drawColor(Color.WHITE);
         paint.setColor(Color.GRAY);
         paint.setStrokeWidth(2);
@@ -744,11 +762,8 @@ public class MainActivity extends AppCompatActivity {
                 drawHeightPoint(kH, minH, (indexXY - 1) * strokeWidth, startH,indexXY * strokeWidth, stopH);
                 y[indexXY]=stopH;
             }
-
         }
         indexXY++;
-
-
     }
 
     public void drawHight(){
